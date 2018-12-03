@@ -1,3 +1,8 @@
+/* 
+ * The Trip
+ * PC/UVa IDs: 110103/10137
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 

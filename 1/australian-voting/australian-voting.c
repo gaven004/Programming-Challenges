@@ -1,3 +1,7 @@
+/*
+ * Australian Voting
+ * PC/UVa IDs: 110108/10142
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

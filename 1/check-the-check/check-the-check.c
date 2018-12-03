@@ -1,3 +1,8 @@
+/* 
+ * Check the Check
+ * PC/UVa IDs: 110107/10196
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,8 @@
+/* 
+ * Graphical Editor
+ * PC/UVa IDs: 110105/10267
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

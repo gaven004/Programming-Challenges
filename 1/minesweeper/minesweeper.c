@@ -1,3 +1,8 @@
+/*
+ * Minesweeper
+ * PC/UVa IDs: 110102/10189
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

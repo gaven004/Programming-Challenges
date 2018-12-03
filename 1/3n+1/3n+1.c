@@ -1,3 +1,8 @@
+/* 
+ * The 3n + 1 Problem
+ * PC/UVa IDs: 110101/100
+ */
+
 #include <stdio.h>
 
 #define MAX_VALUE 1000000
