@@ -8,8 +8,7 @@ typedef struct {
   int *items;
 } stack_t;
 
-/* function to create a stack of given capacity.
- * It initializes size of stack as 0  */
+/* function to create a stack of given capacity. */
 stack_t *create_stack(unsigned capacity) {
   stack_t *stack = (stack_t *)malloc(sizeof(stack_t));
   if (NULL == stack) {
