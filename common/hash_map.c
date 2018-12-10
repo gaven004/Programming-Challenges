@@ -24,7 +24,8 @@ typedef struct {
 } hash_map_t;
 
 int _table_size_for(int cap);
-void _set_node_value(hash_map_node_t *node, char *value);
+void _set_node(hash_map_node_t *node, char *key, char *value);
+void _put_map_node_internal(hash_map_t *map, hash_map_node_t *node);
 int strhash(char *s);
 hash_map_t *create_map(int capacity, float load_factor);
 hash_map_t *create_map_default();
@@ -232,43 +233,42 @@ void _set_node(hash_map_node_t *node, char *key, char *value) {
 }
 
 void put_map_node(hash_map_t *map, char *key, char *value) {
-  int hash, index, len;
-  char *ps;
-  hash_map_node_t *node, *previous;
+  int hash, index;
+  hash_map_node_t *current, *previous;
 
   hash = strhash(key);
   index = hash % map->table_size;
 
   previous = NULL;
-  node = map->table[index];
+  current = map->table[index];
 
-  while (node != NULL) {
-    if (node->hash == hash && strcmp(key, node->key) == 0) {
-      if (strcmp(value, node->value)) {
-        _set_node(node, NULL, value);
+  while (current != NULL) {
+    if (current->hash == hash && strcmp(key, current->key) == 0) {
+      if (strcmp(value, current->value)) {
+        _set_node(current, NULL, value);
       }
       return;
     }
-    previous = node;
-    node = node->next;
+    previous = current;
+    current = current->next;
   }
 
-  node = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
-  if (NULL == node) {
+  current = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
+  if (NULL == current) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
 
-  node->hash = hash;
-  node->key = NULL;
-  node->value = NULL;
-  node->next = NULL;
-  _set_node(node, key, value);
+  current->hash = hash;
+  current->key = NULL;
+  current->value = NULL;
+  current->next = NULL;
+  _set_node(current, key, value);
 
   if (NULL == previous) {
-    map->table[index] = node;
+    map->table[index] = current;
   } else {
-    previous->next = node;
+    previous->next = current;
   }
 
   map->size++;
@@ -297,26 +297,26 @@ char *get_map_node(hash_map_t *map, char *key) {
 
 void delete_map_node(hash_map_t *map, char *key) {
   int hash, index;
-  hash_map_node_t *node, *previous;
+  hash_map_node_t *current, *previous;
 
   hash = strhash(key);
   index = hash % map->table_size;
-  node = map->table[index];
+  current = map->table[index];
   previous = NULL;
 
-  while (node != NULL) {
-    if (node->hash == hash && strcmp(key, node->key) == 0) {
+  while (current != NULL) {
+    if (current->hash == hash && strcmp(key, current->key) == 0) {
       if (NULL == previous) {
         map->table[index] = NULL;
       } else {
-        previous->next = node->next;
+        previous->next = current->next;
       }
-      free(node);
+      free(current);
       map->size--;
       return;
     }
-    previous = node;
-    node = node->next;
+    previous = current;
+    current = current->next;
   }
 }
 
@@ -338,19 +338,38 @@ int contains_map_key(hash_map_t *map, char *key) {
   return 0;
 }
 
+void _put_map_node_internal(hash_map_t *map, hash_map_node_t *node) {
+  int index;
+  hash_map_node_t *current, *previous;
+
+  index = node->hash % map->table_size;
+  previous = NULL, current = map->table[index];
+  while (current != NULL) {
+    previous = current, current = current->next;
+  }
+
+  if (NULL == previous) {
+    map->table[index] = node;
+  } else {
+    previous->next = node;
+  }
+
+  map->size++;
+}
+
 hash_map_t *resize_map(hash_map_t *map, int capacity) {
   int i;
-  hash_map_node_t *node, *previous;
+  hash_map_node_t *current, *next;
   hash_map_t *new_map, *swap;
 
   new_map = create_map(capacity, map->load_factor);
 
   for (i = 0; i < map->table_size; ++i) {
-    node = map->table[i];
-    while (node != NULL) {
-      put_map_node(new_map, node->key, node->value);
-      previous = node, node = node->next;
-      free(previous);
+    current = map->table[i];
+    while (current != NULL) {
+      next = current->next, current->next = NULL;
+      _put_map_node_internal(new_map, current);
+      current = next;
     }
     map->table[i] = NULL;
   }
