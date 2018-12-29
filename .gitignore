@@ -1,6 +1,9 @@
 # Test code
 **/test/
 
+# Backup files
+**/bak/
+
 # VS code settings
 **/.vscode/
 
