@@ -147,7 +147,7 @@ void _add_set_node_internal(hash_set_t *set, hash_set_node_t *node) {
   int index;
   hash_set_node_t *current, *previous;
 
-  index = node->hash % set->table_size;
+  index = (node->hash  & 0x7FFFFFFF) % set->table_size;
 
   previous = NULL, current = set->table[index];
   while (current != NULL) {
@@ -213,7 +213,7 @@ int add_set_node(hash_set_t *set, const char *element) {
   hash_set_node_t *current, *previous;
 
   hash = set->hash(element);
-  index = hash % set->table_size;
+  index = (hash & 0x7FFFFFFF) % set->table_size;
 
   previous = NULL;
   current = set->table[index];
@@ -261,7 +261,7 @@ int remove_set_node(hash_set_t *set, const char *element) {
   hash_set_node_t *current, *previous;
 
   hash = set->hash(element);
-  index = hash % set->table_size;
+  index = (hash & 0x7FFFFFFF) % set->table_size;
   current = set->table[index];
   previous = NULL;
 
@@ -288,7 +288,7 @@ int contains_set_node(hash_set_t *set, const char *element) {
   hash_set_node_t *node;
 
   hash = set->hash(element);
-  index = hash % set->table_size;
+  index = (hash & 0x7FFFFFFF) % set->table_size;
   node = set->table[index];
 
   while (node != NULL) {

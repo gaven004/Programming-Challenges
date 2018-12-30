@@ -237,7 +237,7 @@ void put_map_node(hash_map_t *map, char *key, char *value) {
   hash_map_node_t *current, *previous;
 
   hash = strhash(key);
-  index = hash % map->table_size;
+  index = (hash & 0x7FFFFFFF) % map->table_size;
 
   previous = NULL;
   current = map->table[index];
@@ -282,7 +282,7 @@ char *get_map_node(hash_map_t *map, char *key) {
   hash_map_node_t *node;
 
   hash = strhash(key);
-  index = hash % map->table_size;
+  index = (hash & 0x7FFFFFFF) % map->table_size;
   node = map->table[index];
 
   while (node != NULL) {
@@ -300,7 +300,7 @@ void delete_map_node(hash_map_t *map, char *key) {
   hash_map_node_t *current, *previous;
 
   hash = strhash(key);
-  index = hash % map->table_size;
+  index = (hash & 0x7FFFFFFF) % map->table_size;
   current = map->table[index];
   previous = NULL;
 
@@ -325,7 +325,7 @@ int contains_map_key(hash_map_t *map, char *key) {
   hash_map_node_t *node;
 
   hash = strhash(key);
-  index = hash % map->table_size;
+  index = (hash & 0x7FFFFFFF) % map->table_size;
   node = map->table[index];
 
   while (node != NULL) {
@@ -342,7 +342,7 @@ void _put_map_node_internal(hash_map_t *map, hash_map_node_t *node) {
   int index;
   hash_map_node_t *current, *previous;
 
-  index = node->hash % map->table_size;
+  index = (node->hash & 0x7FFFFFFF) % map->table_size;
   previous = NULL, current = map->table[index];
   while (current != NULL) {
     previous = current, current = current->next;
