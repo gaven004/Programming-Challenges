@@ -135,38 +135,13 @@ void init_4_calc() {
   }
 }
 
-void calculate_dijkstra() {
-  int i, v, current, shortest;
-  init_4_calc();
-  current = 0;
-  while (!visited[current]) {
-    for (i = 0; i < nAuthors; i++) {
-      if (graph[current][i]) {
-        if (distance[i] > distance[current] + 1) {
-          distance[i] = distance[current] + 1;
-        }
-      }
-    }
+int get_distance(int k) {
+  int i, v, current;
 
-    visited[current] = 1;
-
-    shortest = INT_MAX;
-    for (i = 1; i < nAuthors; i++) {
-      if (!visited[i] && distance[i] < shortest) {
-        current = i, shortest = distance[i];
-      }
-    }
-
-    if (shortest == INT_MAX) {
-      break;
-    }
+  if (visited[k]) {
+    return distance[k];
   }
-}
 
-void calculate_bfs() {
-  int i, v, current, shortest;
-  init_4_calc();
-  en_queue(queue, 0);
   while (!is_empty(queue)) {
     current = de_queue(queue);
 
@@ -180,7 +155,12 @@ void calculate_bfs() {
     }
 
     visited[current] = 1;
+
+    if (current == k) {
+      return distance[k];
+    }
   }
+  return INT_MAX;
 }
 
 int main() {
@@ -196,6 +176,10 @@ int main() {
   strcpy(authors[0], "Erdos, P.");
 
   for (scanf("%d", &scenarios), s = 1; s <= scenarios; s++) {
+    if (s > 1) {
+      clear_queue(queue);
+    }
+
     nAuthors = 1;
 
     for (i = 0; i < MAX_NUMBER_OF_AUTHORS; i++) {
@@ -210,13 +194,14 @@ int main() {
       add_authors(buff);
     }
 
-    calculate_bfs();
+    init_4_calc();
+    en_queue(queue, 0);
 
     printf("Scenario %d\n", s);
     for (i = 0; i < N; i++) {
       gets(buff);
 
-      if ((k = index_of(buff)) >= 0 && (v = distance[k]) < INT_MAX) {
+      if ((k = index_of(buff)) >= 0 && (v = get_distance(k)) < INT_MAX) {
         printf("%s %d\n", buff, v);
       } else {
         printf("%s infinity\n", buff);
