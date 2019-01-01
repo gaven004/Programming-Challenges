@@ -118,7 +118,7 @@ hash_set_t *create_set() {
 
   hash_set_t *set = (hash_set_t *)malloc(sizeof(hash_set_t));
   set->size = 0;
-  set->table_size = 1024;
+  set->table_size = 128;
   set->table =
       (hash_set_node_t **)malloc(set->table_size * sizeof(hash_set_node_t *));
 
@@ -279,12 +279,14 @@ void add_authors(char *buff) {
 
   *pt = '\0', n++;
 
-  for (i = 0; i < n; i++) {
-    author = put_map_node(authors, names[i], names[i]);
+  if (n > 1) {
+    for (i = 0; i < n; i++) {
+      author = put_map_node(authors, names[i], names[i]);
 
-    for (j = 0; j < n; j++) {
-      if (i != j) {
-        add_set_node(author->coauthors, names[j]);
+      for (j = 0; j < n; j++) {
+        if (i != j) {
+          add_set_node(author->coauthors, names[j]);
+        }
       }
     }
   }
@@ -347,22 +349,13 @@ int get_distance(const char *key) {
 }
 
 int main() {
-  clock_t start, end;
-
   int scenarios, P, N, en;
   int s, i, j, k, v;
   char buff[BUFFER_LENGTH];
 
-  start = clock();
-
-  authors = create_map();
-  queue = create_queue(MAX_NUMBER_OF_AUTHORS * MAX_LINKS);
-
   for (scanf("%d", &scenarios), s = 1; s <= scenarios; s++) {
-    if (s > 1) {
-      clear_map(authors);
-      clear_queue(queue);
-    }
+    authors = create_map();
+    queue = create_queue(MAX_NUMBER_OF_AUTHORS * MAX_LINKS);
 
     scanf("%d %d", &P, &N), gets(buff);
     for (i = 0; i < P; i++) {
@@ -382,9 +375,6 @@ int main() {
       }
     }
   }
-
-  end = clock();
-  printf("\nElapsed: %ld\n", end - start);
 
   return 0;
 }
