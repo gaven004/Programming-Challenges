@@ -14,25 +14,64 @@
 #define BUFFER_LENGTH (10001)
 #define MAX_LINKS (501)
 
+typedef struct _hash_set_node {
+  char value[MAX_LENGTH_OF_NAME];
+  struct _hash_set_node *next;
+} hash_set_node_t;
+
+typedef struct {
+  int size;       /* The number of elements contained in this set. */
+  int table_size; /* The size of table */
+  hash_set_node_t **table;
+} hash_set_t;
+
+typedef struct {
+  char name[MAX_LENGTH_OF_NAME];
+  int erdos_num;
+  int visited;
+  hash_set_t *coauthors;
+} author_t;
+
+typedef struct _hash_map_node {
+  char key[MAX_LENGTH_OF_NAME];
+  author_t *value;
+  struct _hash_map_node *next;
+} hash_map_node_t;
+
+typedef struct {
+  int size;       /* The number of key-value mappings contained in this map. */
+  int table_size; /* The size of table */
+  hash_map_node_t **table;
+} hash_map_t;
+
 typedef struct {
   unsigned capacity;
-  int *items; /* body of queue */
-  int head;   /* position of head element */
-  int tail;   /* position of tail element */
-  int size;   /* number of queue elements */
+  author_t **items; /* body of queue */
+  int head;         /* position of head element */
+  int tail;         /* position of tail element */
+  int size;         /* number of queue elements */
 } queue_t;
 
-int nAuthors;
-char authors[MAX_NUMBER_OF_AUTHORS][MAX_LENGTH_OF_NAME];
-int graph[MAX_NUMBER_OF_AUTHORS][MAX_NUMBER_OF_AUTHORS];
-int distance[MAX_NUMBER_OF_AUTHORS], visited[MAX_NUMBER_OF_AUTHORS];
+hash_map_t *authors;
 queue_t *queue;
 
+int strhash(const char *s) {
+  int h = 0;
+
+  while (*s) {
+    h = 31 * h + *s;
+    s++;
+  }
+
+  return h;
+}
+
+/* Begin of queue */
 queue_t *create_queue(unsigned capacity) {
   queue_t *queue = (queue_t *)malloc(sizeof(queue_t));
   queue->capacity = capacity;
   queue->size = queue->head = queue->tail = 0;
-  queue->items = (int *)malloc(queue->capacity * sizeof(int));
+  queue->items = (author_t **)malloc(queue->capacity * sizeof(author_t *));
   return queue;
 }
 
@@ -44,7 +83,7 @@ int is_full(queue_t *queue) { return queue->size == queue->capacity; }
 
 int is_empty(queue_t *queue) { return queue->size == 0; }
 
-void en_queue(queue_t *queue, int x) {
+void en_queue(queue_t *queue, author_t *x) {
   if (is_full(queue)) {
     return;
   }
@@ -56,11 +95,11 @@ void en_queue(queue_t *queue, int x) {
   queue->size++;
 }
 
-int de_queue(queue_t *queue) {
-  int x;
+author_t *de_queue(queue_t *queue) {
+  author_t *x;
 
   if (is_empty(queue)) {
-    return INT_MIN;
+    return NULL;
   }
 
   x = queue->items[queue->head++];
@@ -71,44 +110,165 @@ int de_queue(queue_t *queue) {
 
   return (x);
 }
+/* End of queue */
 
-int index_of(const char *name) {
+/* Begin of hash set */
+hash_set_t *create_set() {
   int i;
 
-  for (i = 0; i < nAuthors; i++) {
-    if (!strcmp(authors[i], name)) {
-      return i;
+  hash_set_t *set = (hash_set_t *)malloc(sizeof(hash_set_t));
+  set->size = 0;
+  set->table_size = 1024;
+  set->table =
+      (hash_set_node_t **)malloc(set->table_size * sizeof(hash_set_node_t *));
+
+  for (i = 0; i < set->table_size; i++) {
+    set->table[i] = NULL;
+  }
+
+  return set;
+}
+
+int add_set_node(hash_set_t *set, const char *value) {
+  int hash, index, len;
+  hash_set_node_t *current, *previous;
+
+  hash = strhash(value);
+  index = (hash & 0x7FFFFFFF) % set->table_size;
+
+  previous = NULL;
+  current = set->table[index];
+
+  while (current != NULL) {
+    if (strcmp(current->value, value) == 0) {
+      return 0;
     }
+    previous = current;
+    current = current->next;
   }
 
-  return -1;
-}
+  current = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
+  strcpy(current->value, value);
+  current->next = NULL;
 
-int put(const char *name) {
+  if (NULL == previous) {
+    set->table[index] = current;
+  } else {
+    previous->next = current;
+  }
+
+  set->size++;
+  return 1;
+}
+/* End of hash set */
+
+/* Begin of hash map */
+hash_map_t *create_map() {
   int i;
 
-  i = index_of(name);
+  hash_map_t *map = (hash_map_t *)malloc(sizeof(hash_map_t));
 
-  if (i >= 0) {
-    return i;
+  map->size = 0;
+  map->table_size = 16384;
+
+  map->table =
+      (hash_map_node_t **)malloc(map->table_size * sizeof(hash_map_node_t *));
+
+  for (i = 0; i < map->table_size; i++) {
+    map->table[i] = NULL;
   }
 
-  strcpy(authors[nAuthors], name);
-
-  return nAuthors++;
+  return map;
 }
+
+void clear_map(hash_map_t *map) {
+  int i;
+  hash_map_node_t *node, *previous;
+
+  for (i = 0; i < map->table_size; ++i) {
+    node = map->table[i];
+
+    while (node != NULL) {
+      previous = node, node = node->next;
+      free(previous->value->coauthors);
+      free(previous->value);
+      free(previous);
+    }
+
+    map->table[i] = NULL;
+  }
+
+  map->size = 0;
+}
+
+author_t *put_map_node(hash_map_t *map, const char *key, const char *name) {
+  int hash, index;
+  hash_map_node_t *current, *previous;
+
+  hash = strhash(key);
+  index = (hash & 0x7FFFFFFF) % map->table_size;
+
+  previous = NULL;
+  current = map->table[index];
+
+  while (current != NULL) {
+    if (strcmp(key, current->key) == 0) {
+      return current->value;
+    }
+    previous = current;
+    current = current->next;
+  }
+
+  current = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
+  strcpy(current->key, key);
+  author_t *value = (author_t *)malloc(sizeof(author_t));
+  strcpy(value->name, name);
+  value->erdos_num = INT_MAX;
+  value->visited = 0;
+  value->coauthors = create_set();
+  current->value = value;
+  current->next = NULL;
+
+  if (NULL == previous) {
+    map->table[index] = current;
+  } else {
+    previous->next = current;
+  }
+
+  map->size++;
+  return current->value;
+}
+
+author_t *get_map_value(hash_map_t *map, const char *key) {
+  int hash, index;
+  hash_map_node_t *node;
+
+  hash = strhash(key);
+  index = (hash & 0x7FFFFFFF) % map->table_size;
+  node = map->table[index];
+
+  while (node != NULL) {
+    if (strcmp(key, node->key) == 0) {
+      return node->value;
+    }
+    node = node->next;
+  }
+
+  return NULL;
+}
+/* End of map */
 
 void add_authors(char *buff) {
-  char name[MAX_LENGTH_OF_NAME], *ps, *pt;
-  int f, i, j, k, n, a[MAX_NUMBER_OF_AUTHORS];
+  int f, i, j, n;
+  char names[MAX_NUMBER_OF_AUTHORS][MAX_LENGTH_OF_NAME], *ps, *pt;
+  author_t *author;
 
-  ps = buff, pt = name, n = f = 0;
+  n = f = 0, ps = buff, pt = names[n];
   while (*ps != ':') {
     if (*ps == ',') {
       if (f) {
-        f = 0, *pt = '\0';
-        k = put(name), a[n++] = k;
-        pt = name, ps += 2;
+        f = 0, *pt = '\0', n++;
+        pt = names[n], ps += 2;
       } else {
         f = 1, *pt++ = *ps++;
       }
@@ -117,49 +277,72 @@ void add_authors(char *buff) {
     }
   }
 
-  *pt = '\0', k = put(name), a[n++] = k;
+  *pt = '\0', n++;
 
-  for (i = 0; i < n - 1; i++) {
-    for (j = i + 1; j < n; j++) {
-      graph[a[i]][a[j]] = graph[a[j]][a[i]] = 1;
+  for (i = 0; i < n; i++) {
+    author = put_map_node(authors, names[i], names[i]);
+
+    for (j = 0; j < n; j++) {
+      if (i != j) {
+        add_set_node(author->coauthors, names[j]);
+      }
     }
   }
 }
 
 void init_4_calc() {
-  int i;
-
-  distance[0] = 0, visited[0] = 0;
-  for (i = 1; i < nAuthors; i++) {
-    distance[i] = INT_MAX, visited[i] = 0;
-  }
+  author_t *root;
+  root = get_map_value(authors, "Erdos, P.");
+  root->erdos_num = 0;
+  en_queue(queue, root);
 }
 
-int get_distance(int k) {
-  int i, v, current;
+int get_distance(const char *key) {
+  int i, v;
+  author_t *current, *next;
+  hash_set_t *coauthors;
+  hash_set_node_t *coauthor;
 
-  if (visited[k]) {
-    return distance[k];
+  current = get_map_value(authors, key);
+
+  if (current == NULL) {
+    return INT_MAX;
+  }
+
+  if (current->visited) {
+    return current->erdos_num;
   }
 
   while (!is_empty(queue)) {
     current = de_queue(queue);
 
-    for (i = 0; i < nAuthors; i++) {
-      if (graph[current][i] && !visited[i]) {
-        if (distance[i] > distance[current] + 1) {
-          distance[i] = distance[current] + 1;
+    coauthors = current->coauthors;
+
+    if (coauthors != NULL) {
+      for (i = 0; i < coauthors->table_size; i++) {
+        coauthor = coauthors->table[i];
+        while (coauthor != NULL) {
+          next = get_map_value(authors, coauthor->value);
+
+          if (!next->visited) {
+            if (next->erdos_num > current->erdos_num + 1) {
+              next->erdos_num = current->erdos_num + 1;
+            }
+            en_queue(queue, next);
+          }
+
+          coauthor = coauthor->next;
         }
-        en_queue(queue, i);
       }
     }
 
-    visited[current] = 1;
+    current->visited = 1;
 
-    if (current == k) {
-      return distance[k];
+    if (!strcmp(current->name, key)) {
+      return current->erdos_num;
     }
   }
+
   return INT_MAX;
 }
 
@@ -172,20 +355,13 @@ int main() {
 
   start = clock();
 
+  authors = create_map();
   queue = create_queue(MAX_NUMBER_OF_AUTHORS * MAX_LINKS);
-  strcpy(authors[0], "Erdos, P.");
 
   for (scanf("%d", &scenarios), s = 1; s <= scenarios; s++) {
     if (s > 1) {
+      clear_map(authors);
       clear_queue(queue);
-    }
-
-    nAuthors = 1;
-
-    for (i = 0; i < MAX_NUMBER_OF_AUTHORS; i++) {
-      for (j = 0; j < MAX_NUMBER_OF_AUTHORS; j++) {
-        graph[i][j] = 0;
-      }
     }
 
     scanf("%d %d", &P, &N), gets(buff);
@@ -195,13 +371,11 @@ int main() {
     }
 
     init_4_calc();
-    en_queue(queue, 0);
 
     printf("Scenario %d\n", s);
     for (i = 0; i < N; i++) {
       gets(buff);
-
-      if ((k = index_of(buff)) >= 0 && (v = get_distance(k)) < INT_MAX) {
+      if ((v = get_distance(buff)) < INT_MAX) {
         printf("%s %d\n", buff, v);
       } else {
         printf("%s infinity\n", buff);
