@@ -20,7 +20,6 @@ typedef struct _hash_set_node {
 } hash_set_node_t;
 
 typedef struct {
-  int size;       /* The number of elements contained in this set. */
   int table_size; /* The size of table */
   hash_set_node_t **table;
 } hash_set_t;
@@ -39,7 +38,6 @@ typedef struct _hash_map_node {
 } hash_map_node_t;
 
 typedef struct {
-  int size;       /* The number of key-value mappings contained in this map. */
   int table_size; /* The size of table */
   hash_map_node_t **table;
 } hash_map_t;
@@ -117,7 +115,6 @@ hash_set_t *create_set() {
   int i;
 
   hash_set_t *set = (hash_set_t *)malloc(sizeof(hash_set_t));
-  set->size = 0;
   set->table_size = 128;
   set->table =
       (hash_set_node_t **)malloc(set->table_size * sizeof(hash_set_node_t *));
@@ -131,33 +128,25 @@ hash_set_t *create_set() {
 
 int add_set_node(hash_set_t *set, const char *value) {
   int hash, index, len;
-  hash_set_node_t *current, *previous;
+  hash_set_node_t *node;
 
   hash = strhash(value);
   index = (hash & 0x7FFFFFFF) % set->table_size;
 
-  previous = NULL;
-  current = set->table[index];
-
-  while (current != NULL) {
-    if (strcmp(current->value, value) == 0) {
+  node = set->table[index];
+  while (node) {
+    if (!strcmp(node->value, value)) {
       return 0;
     }
-    previous = current;
-    current = current->next;
+    node = node->next;
   }
 
-  current = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
-  strcpy(current->value, value);
-  current->next = NULL;
+  node = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
+  strcpy(node->value, value);
+  node->next = set->table[index];
 
-  if (NULL == previous) {
-    set->table[index] = current;
-  } else {
-    previous->next = current;
-  }
+  set->table[index] = node;
 
-  set->size++;
   return 1;
 }
 /* End of hash set */
@@ -168,7 +157,6 @@ hash_map_t *create_map() {
 
   hash_map_t *map = (hash_map_t *)malloc(sizeof(hash_map_t));
 
-  map->size = 0;
   map->table_size = 16384;
 
   map->table =
@@ -188,7 +176,7 @@ void clear_map(hash_map_t *map) {
   for (i = 0; i < map->table_size; ++i) {
     node = map->table[i];
 
-    while (node != NULL) {
+    while (node) {
       previous = node, node = node->next;
       free(previous->value->coauthors);
       free(previous->value);
@@ -197,46 +185,36 @@ void clear_map(hash_map_t *map) {
 
     map->table[i] = NULL;
   }
-
-  map->size = 0;
 }
 
 author_t *put_map_node(hash_map_t *map, const char *key, const char *name) {
   int hash, index;
-  hash_map_node_t *current, *previous;
+  hash_map_node_t *node;
 
   hash = strhash(key);
   index = (hash & 0x7FFFFFFF) % map->table_size;
 
-  previous = NULL;
-  current = map->table[index];
-
-  while (current != NULL) {
-    if (strcmp(key, current->key) == 0) {
-      return current->value;
+  node = map->table[index];
+  while (node) {
+    if (!strcmp(key, node->key)) {
+      return node->value;
     }
-    previous = current;
-    current = current->next;
+    node = node->next;
   }
 
-  current = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
-  strcpy(current->key, key);
+  node = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
+  strcpy(node->key, key);
   author_t *value = (author_t *)malloc(sizeof(author_t));
   strcpy(value->name, name);
   value->erdos_num = INT_MAX;
   value->visited = 0;
   value->coauthors = create_set();
-  current->value = value;
-  current->next = NULL;
+  node->value = value;
+  node->next = map->table[index];
 
-  if (NULL == previous) {
-    map->table[index] = current;
-  } else {
-    previous->next = current;
-  }
+  map->table[index] = node;
 
-  map->size++;
-  return current->value;
+  return value;
 }
 
 author_t *get_map_value(hash_map_t *map, const char *key) {
@@ -247,8 +225,8 @@ author_t *get_map_value(hash_map_t *map, const char *key) {
   index = (hash & 0x7FFFFFFF) % map->table_size;
   node = map->table[index];
 
-  while (node != NULL) {
-    if (strcmp(key, node->key) == 0) {
+  while (node) {
+    if (!strcmp(key, node->key)) {
       return node->value;
     }
     node = node->next;
@@ -279,14 +257,12 @@ void add_authors(char *buff) {
 
   *pt = '\0', n++;
 
-  if (n > 1) {
-    for (i = 0; i < n; i++) {
-      author = put_map_node(authors, names[i], names[i]);
+  for (i = 0; i < n; i++) {
+    author = put_map_node(authors, names[i], names[i]);
 
-      for (j = 0; j < n; j++) {
-        if (i != j) {
-          add_set_node(author->coauthors, names[j]);
-        }
+    for (j = 0; j < n; j++) {
+      if (i != j) {
+        add_set_node(author->coauthors, names[j]);
       }
     }
   }
@@ -295,8 +271,10 @@ void add_authors(char *buff) {
 void init_4_calc() {
   author_t *root;
   root = get_map_value(authors, "Erdos, P.");
-  root->erdos_num = 0;
-  en_queue(queue, root);
+  if (root) {
+    root->erdos_num = 0;
+    en_queue(queue, root);
+  }
 }
 
 int get_distance(const char *key) {
@@ -307,7 +285,7 @@ int get_distance(const char *key) {
 
   current = get_map_value(authors, key);
 
-  if (current == NULL) {
+  if (!current) {
     return INT_MAX;
   }
 
@@ -320,10 +298,10 @@ int get_distance(const char *key) {
 
     coauthors = current->coauthors;
 
-    if (coauthors != NULL) {
+    if (coauthors) {
       for (i = 0; i < coauthors->table_size; i++) {
         coauthor = coauthors->table[i];
-        while (coauthor != NULL) {
+        while (coauthor) {
           next = get_map_value(authors, coauthor->value);
 
           if (!next->visited) {
