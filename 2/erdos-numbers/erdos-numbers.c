@@ -115,7 +115,7 @@ hash_set_t *create_set() {
   int i;
 
   hash_set_t *set = (hash_set_t *)malloc(sizeof(hash_set_t));
-  set->table_size = 128;
+  set->table_size = 32;
   set->table =
       (hash_set_node_t **)malloc(set->table_size * sizeof(hash_set_node_t *));
 
