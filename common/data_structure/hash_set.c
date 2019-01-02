@@ -87,7 +87,7 @@ hash_set_t *create_set(int capacity, float load_factor,
     load_factor = DEFAULT_LOAD_FACTOR;
 
   hash_set_t *set = (hash_set_t *)malloc(sizeof(hash_set_t));
-  if (NULL == set) {
+  if (!set) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -101,7 +101,7 @@ hash_set_t *create_set(int capacity, float load_factor,
 
   set->table =
       (hash_set_node_t **)malloc(set->table_size * sizeof(hash_set_node_t *));
-  if (NULL == set->table) {
+  if (!set->table) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -116,7 +116,7 @@ hash_set_t *create_set(int capacity, float load_factor,
 void free_set(hash_set_t *set) {
   clear_set(set);
 
-  if (NULL != set->table) {
+  if (set->table) {
     free(set->table);
     set->table = NULL;
   }
@@ -132,7 +132,7 @@ void clear_set(hash_set_t *set) {
   for (i = 0; i < set->table_size; ++i) {
     current = set->table[i];
 
-    while (current != NULL) {
+    while (current) {
       previous = current, current = current->next;
       free(previous);
     }
@@ -147,19 +147,9 @@ void _add_set_node_internal(hash_set_t *set, hash_set_node_t *node) {
   int index;
   hash_set_node_t *current, *previous;
 
-  index = (node->hash  & 0x7FFFFFFF) % set->table_size;
-
-  previous = NULL, current = set->table[index];
-  while (current != NULL) {
-    previous = current, current = current->next;
-  }
-
-  if (NULL == previous) {
-    set->table[index] = node;
-  } else {
-    previous->next = node;
-  }
-
+  index = (node->hash & 0x7FFFFFFF) % set->table_size;
+  node->next = set->table[index];
+  set->table[index] = node;
   set->size++;
 }
 
@@ -172,7 +162,7 @@ hash_set_t *resize_set(hash_set_t *set, int capacity) {
 
   for (i = 0; i < set->table_size; ++i) {
     node = set->table[i];
-    while (node != NULL) {
+    while (node) {
       next = node->next, node->next = NULL;
       _add_set_node_internal(new_set, node);
       node = next;
@@ -200,7 +190,7 @@ void print_set(hash_set_t *set) {
   printf("set: [");
   for (i = 0; i < set->table_size; ++i) {
     node = set->table[i];
-    while (node != NULL) {
+    while (node) {
       printf("%s;", node->element);
       node = node->next;
     }
@@ -210,43 +200,35 @@ void print_set(hash_set_t *set) {
 
 int add_set_node(hash_set_t *set, const char *element) {
   int hash, index, len;
-  hash_set_node_t *current, *previous;
+  hash_set_node_t *node;
 
   hash = set->hash(element);
   index = (hash & 0x7FFFFFFF) % set->table_size;
 
-  previous = NULL;
-  current = set->table[index];
-
-  while (current != NULL) {
-    if (current->hash == hash && set->cmp(element, current->element) == 0) {
+  node = set->table[index];
+  while (node) {
+    if (node->hash == hash && set->cmp(element, node->element) == 0) {
       return 0;
     }
-    previous = current;
-    current = current->next;
+    node = node->next;
   }
 
-  current = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
-  if (NULL == current) {
+  node = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
+  if (!node) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
 
   len = strlen(element);
-  current->element = malloc((len + 1) * sizeof(char));
-  if (NULL == current->element) {
+  node->element = malloc((len + 1) * sizeof(char));
+  if (!node->element) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
-  strcpy(current->element, element);
-  current->hash = hash;
-  current->next = NULL;
-
-  if (NULL == previous) {
-    set->table[index] = current;
-  } else {
-    previous->next = current;
-  }
+  strcpy(node->element, element);
+  node->hash = hash;
+  node->next = set->table[index];
+  set->table[index] = node;
 
   set->size++;
   if (set->size > set->threshold) {
@@ -265,9 +247,9 @@ int remove_set_node(hash_set_t *set, const char *element) {
   current = set->table[index];
   previous = NULL;
 
-  while (current != NULL) {
+  while (current) {
     if (current->hash == hash && set->cmp(element, current->element) == 0) {
-      if (NULL == previous) {
+      if (!previous) {
         set->table[index] = NULL;
       } else {
         previous->next = current->next;
@@ -291,7 +273,7 @@ int contains_set_node(hash_set_t *set, const char *element) {
   index = (hash & 0x7FFFFFFF) % set->table_size;
   node = set->table[index];
 
-  while (node != NULL) {
+  while (node) {
     if (node->hash == hash && set->cmp(element, node->element) == 0) {
       return 1;
     }
@@ -307,7 +289,7 @@ hash_set_t *union_set(hash_set_t *s, hash_set_t *t) {
 
   for (i = 0; i < t->table_size; ++i) {
     node = t->table[i];
-    while (node != NULL) {
+    while (node) {
       add_set_node(s, node->element);
       node = node->next;
     }
@@ -322,7 +304,7 @@ hash_set_t *intersection_set(hash_set_t *s, hash_set_t *t) {
 
   for (i = 0; i < s->table_size; ++i) {
     node = s->table[i];
-    while (node != NULL) {
+    while (node) {
       if (!contains_set_node(t, node->element)) {
         remove_set_node(s, node->element);
       }

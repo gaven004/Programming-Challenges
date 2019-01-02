@@ -9,7 +9,7 @@ typedef struct _node {
 
 list_t *create_list() {
   list_t *list = (list_t *)malloc(sizeof(list_t));
-  if (NULL == list) {
+  if (!list) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -22,7 +22,7 @@ void clear_list(list_t *list) {
   node_t *current, *next;
 
   current = list->next;
-  while (NULL != current) {
+  while (current) {
     next = current->next;
     free(current);
     current = next;
@@ -40,7 +40,7 @@ int is_empty(list_t *list) { return (list->next == NULL); }
 
 void insert_beginning(list_t *list, int x) {
   node_t *node = (node_t *)malloc(sizeof(node_t));
-  if (NULL == node) {
+  if (!node) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -52,7 +52,7 @@ void insert_beginning(list_t *list, int x) {
 
 void remove_beginning(list_t *list) {
   node_t *node = list->next;
-  if (NULL != node) {
+  if (node) {
     list->next = node->next;
     free(node);
   }
@@ -62,7 +62,7 @@ void insert_last(list_t *list, int x) {
   node_t *node, *current;
 
   node = (node_t *)malloc(sizeof(node_t));
-  if (NULL == node) {
+  if (!node) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -71,7 +71,7 @@ void insert_last(list_t *list, int x) {
   node->next = NULL;
 
   current = list;
-  while (NULL != current->next) {
+  while (current->next) {
     current = current->next;
   }
 
@@ -82,8 +82,8 @@ void remove_last(list_t *list) {
   node_t *current, *previous;
 
   previous = list, current = list->next;
-  if (NULL != current) {
-    while (NULL != current->next) {
+  if (current) {
+    while (current->next) {
       previous = current, current = current->next;
     }
 
@@ -96,7 +96,7 @@ void print_list(list_t *list) {
   node_t *node;
 
   printf("List: ");
-  for (node = list->next; NULL != node; node = node->next) {
+  for (node = list->next; node; node = node->next) {
     printf("%d ", node->element);
   }
   putchar('\n');

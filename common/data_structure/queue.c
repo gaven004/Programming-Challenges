@@ -13,7 +13,7 @@ typedef struct {
 /* function to create a queue of given capacity. */
 queue_t *create_queue(unsigned capacity) {
   queue_t *queue = (queue_t *)malloc(sizeof(queue_t));
-  if (NULL == queue) {
+  if (!queue) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -21,7 +21,7 @@ queue_t *create_queue(unsigned capacity) {
   queue->capacity = capacity;
   queue->size = 0, queue->head = 0, queue->tail = 0;
   queue->items = (int *)malloc(queue->capacity * sizeof(int));
-  if (NULL == queue->items) {
+  if (!queue->items) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -31,8 +31,8 @@ queue_t *create_queue(unsigned capacity) {
 
 /* function to free a queue. */
 void free_queue(queue_t *queue) {
-  if (NULL != queue) {
-    if (NULL != queue->items) {
+  if (queue) {
+    if (queue->items) {
       free(queue->items);
       queue->items = NULL;
     }

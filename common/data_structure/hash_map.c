@@ -142,7 +142,7 @@ hash_map_t *create_map(int capacity, float load_factor) {
     load_factor = DEFAULT_LOAD_FACTOR;
 
   hash_map_t *map = (hash_map_t *)malloc(sizeof(hash_map_t));
-  if (NULL == map) {
+  if (!map) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -154,7 +154,7 @@ hash_map_t *create_map(int capacity, float load_factor) {
 
   map->table =
       (hash_map_node_t **)malloc(map->table_size * sizeof(hash_map_node_t *));
-  if (NULL == map->table) {
+  if (!map->table) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -180,7 +180,7 @@ void clear_map(hash_map_t *map) {
   for (i = 0; i < map->table_size; ++i) {
     node = map->table[i];
 
-    while (node != NULL) {
+    while (node) {
       previous = node, node = node->next;
       free(previous);
     }
@@ -194,7 +194,7 @@ void clear_map(hash_map_t *map) {
 void free_map(hash_map_t *map) {
   clear_map(map);
 
-  if (NULL != map->table) {
+  if (map->table) {
     free(map->table);
     map->table = NULL;
   }
@@ -207,10 +207,10 @@ void _set_node(hash_map_node_t *node, char *key, char *value) {
   int len;
   char *pnew;
 
-  if (NULL != key) {
+  if (key) {
     len = strlen(key);
     pnew = malloc((len + 1) * sizeof(char));
-    if (NULL == pnew) {
+    if (!pnew) {
       fprintf(stderr, "Error: Out of space!!! Exiting...\n");
       exit(EXIT_FAILURE);
     }
@@ -221,12 +221,12 @@ void _set_node(hash_map_node_t *node, char *key, char *value) {
 
   len = strlen(value);
   pnew = malloc((len + 1) * sizeof(char));
-  if (NULL == pnew) {
+  if (!pnew) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
   strcpy(pnew, value);
-  if (NULL != node->value) {
+  if (node->value) {
     free(node->value);
   }
   node->value = pnew;
@@ -234,43 +234,34 @@ void _set_node(hash_map_node_t *node, char *key, char *value) {
 
 void put_map_node(hash_map_t *map, char *key, char *value) {
   int hash, index;
-  hash_map_node_t *current, *previous;
+  hash_map_node_t *node;
 
   hash = strhash(key);
   index = (hash & 0x7FFFFFFF) % map->table_size;
-
-  previous = NULL;
-  current = map->table[index];
-
-  while (current != NULL) {
-    if (current->hash == hash && strcmp(key, current->key) == 0) {
-      if (strcmp(value, current->value)) {
-        _set_node(current, NULL, value);
+  node = map->table[index];
+  while (node) {
+    if (node->hash == hash && !strcmp(key, node->key)) {
+      if (strcmp(value, node->value)) {
+        _set_node(node, NULL, value);
       }
       return;
     }
-    previous = current;
-    current = current->next;
+    node = node->next;
   }
 
-  current = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
-  if (NULL == current) {
+  node = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
+  if (!node) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
 
-  current->hash = hash;
-  current->key = NULL;
-  current->value = NULL;
-  current->next = NULL;
-  _set_node(current, key, value);
+  node->hash = hash;
+  node->key = NULL;
+  node->value = NULL;
+  _set_node(node, key, value);
+  node->next = map->table[index];
 
-  if (NULL == previous) {
-    map->table[index] = current;
-  } else {
-    previous->next = current;
-  }
-
+  map->table[index] = node;
   map->size++;
   if (map->size > map->threshold) {
     map = resize_map(map, map->table_size << 1);
@@ -285,7 +276,7 @@ char *get_map_node(hash_map_t *map, char *key) {
   index = (hash & 0x7FFFFFFF) % map->table_size;
   node = map->table[index];
 
-  while (node != NULL) {
+  while (node) {
     if (node->hash == hash && strcmp(key, node->key) == 0) {
       return node->value;
     }
@@ -304,9 +295,9 @@ void delete_map_node(hash_map_t *map, char *key) {
   current = map->table[index];
   previous = NULL;
 
-  while (current != NULL) {
+  while (current) {
     if (current->hash == hash && strcmp(key, current->key) == 0) {
-      if (NULL == previous) {
+      if (!previous) {
         map->table[index] = NULL;
       } else {
         previous->next = current->next;
@@ -328,7 +319,7 @@ int contains_map_key(hash_map_t *map, char *key) {
   index = (hash & 0x7FFFFFFF) % map->table_size;
   node = map->table[index];
 
-  while (node != NULL) {
+  while (node) {
     if (node->hash == hash && strcmp(key, node->key) == 0) {
       return 1;
     }
@@ -340,20 +331,10 @@ int contains_map_key(hash_map_t *map, char *key) {
 
 void _put_map_node_internal(hash_map_t *map, hash_map_node_t *node) {
   int index;
-  hash_map_node_t *current, *previous;
 
   index = (node->hash & 0x7FFFFFFF) % map->table_size;
-  previous = NULL, current = map->table[index];
-  while (current != NULL) {
-    previous = current, current = current->next;
-  }
-
-  if (NULL == previous) {
-    map->table[index] = node;
-  } else {
-    previous->next = node;
-  }
-
+  node->next = map->table[index];
+  map->table[index] = node;
   map->size++;
 }
 
@@ -366,7 +347,7 @@ hash_map_t *resize_map(hash_map_t *map, int capacity) {
 
   for (i = 0; i < map->table_size; ++i) {
     current = map->table[i];
-    while (current != NULL) {
+    while (current) {
       next = current->next, current->next = NULL;
       _put_map_node_internal(new_map, current);
       current = next;
@@ -393,7 +374,7 @@ void print_map(hash_map_t *map) {
   printf("map: [");
   for (i = 0; i < map->table_size; ++i) {
     node = map->table[i];
-    while (node != NULL) {
+    while (node) {
       printf("%s->%s;", node->key, node->value);
       node = node->next;
     }

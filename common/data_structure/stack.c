@@ -11,7 +11,7 @@ typedef struct {
 /* function to create a stack of given capacity. */
 stack_t *create_stack(unsigned capacity) {
   stack_t *stack = (stack_t *)malloc(sizeof(stack_t));
-  if (NULL == stack) {
+  if (!stack) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -19,7 +19,7 @@ stack_t *create_stack(unsigned capacity) {
   stack->top = -1;
   stack->capacity = capacity;
   stack->items = (int *)malloc(stack->capacity * sizeof(int));
-  if (NULL == stack->items) {
+  if (!stack->items) {
     fprintf(stderr, "Error: Out of space!!! Exiting...\n");
     exit(EXIT_FAILURE);
   }
@@ -29,8 +29,8 @@ stack_t *create_stack(unsigned capacity) {
 
 /* function to free a stack. */
 void free_stack(stack_t *stack) {
-  if (NULL != stack) {
-    if (NULL != stack->items) {
+  if (stack) {
+    if (stack->items) {
       free(stack->items);
       stack->items = NULL;
     }
