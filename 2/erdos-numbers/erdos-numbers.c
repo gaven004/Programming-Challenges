@@ -15,7 +15,8 @@
 #define MAX_LINKS (501)
 
 typedef struct _hash_set_node {
-  char value[MAX_LENGTH_OF_NAME];
+  char key[MAX_LENGTH_OF_NAME];
+  struct _author *value;
   struct _hash_set_node *next;
 } hash_set_node_t;
 
@@ -24,7 +25,7 @@ typedef struct {
   hash_set_node_t **table;
 } hash_set_t;
 
-typedef struct {
+typedef struct _author {
   char name[MAX_LENGTH_OF_NAME];
   int erdos_num;
   int visited;
@@ -126,23 +127,24 @@ hash_set_t *create_set() {
   return set;
 }
 
-int add_set_node(hash_set_t *set, const char *value) {
+int add_set_node(hash_set_t *set, const char *key, author_t *value) {
   int hash, index, len;
   hash_set_node_t *node;
 
-  hash = strhash(value);
+  hash = strhash(key);
   index = (hash & 0x7FFFFFFF) % set->table_size;
 
   node = set->table[index];
   while (node) {
-    if (!strcmp(node->value, value)) {
+    if (!strcmp(node->key, key)) {
       return 0;
     }
     node = node->next;
   }
 
   node = (hash_set_node_t *)malloc(sizeof(hash_set_node_t));
-  strcpy(node->value, value);
+  strcpy(node->key, key);
+  node->value = value;
   node->next = set->table[index];
 
   set->table[index] = node;
@@ -187,23 +189,23 @@ void clear_map(hash_map_t *map) {
   }
 }
 
-author_t *put_map_node(hash_map_t *map, const char *key, const char *name) {
+author_t *put_map_node(hash_map_t *map, const char *name) {
   int hash, index;
   hash_map_node_t *node;
 
-  hash = strhash(key);
+  hash = strhash(name);
   index = (hash & 0x7FFFFFFF) % map->table_size;
 
   node = map->table[index];
   while (node) {
-    if (!strcmp(key, node->key)) {
+    if (!strcmp(name, node->key)) {
       return node->value;
     }
     node = node->next;
   }
 
   node = (hash_map_node_t *)malloc(sizeof(hash_map_node_t));
-  strcpy(node->key, key);
+  strcpy(node->key, name);
   author_t *value = (author_t *)malloc(sizeof(author_t));
   strcpy(value->name, name);
   value->erdos_num = INT_MAX;
@@ -236,16 +238,21 @@ author_t *get_map_value(hash_map_t *map, const char *key) {
 }
 /* End of map */
 
+void add_coauthor(author_t *author, char *coname, author_t *coauthor) {
+  add_set_node(author->coauthors, coname, coauthor);
+}
+
 void add_authors(char *buff) {
   int f, i, j, n;
   char names[MAX_NUMBER_OF_AUTHORS][MAX_LENGTH_OF_NAME], *ps, *pt;
-  author_t *author;
+  author_t *author[MAX_NUMBER_OF_AUTHORS];
 
   n = f = 0, ps = buff, pt = names[n];
   while (*ps != ':') {
     if (*ps == ',') {
       if (f) {
-        f = 0, *pt = '\0', n++;
+        *pt = '\0', author[n] = put_map_node(authors, names[n]);
+        f = 0, n++;
         pt = names[n], ps += 2;
       } else {
         f = 1, *pt++ = *ps++;
@@ -255,15 +262,12 @@ void add_authors(char *buff) {
     }
   }
 
-  *pt = '\0', n++;
+  *pt = '\0', author[n] = put_map_node(authors, names[n]);
 
   for (i = 0; i < n; i++) {
-    author = put_map_node(authors, names[i], names[i]);
-
-    for (j = 0; j < n; j++) {
-      if (i != j) {
-        add_set_node(author->coauthors, names[j]);
-      }
+    for (j = i + 1; j < n + 1; j++) {
+      add_coauthor(author[i], names[j], author[j]);
+      add_coauthor(author[j], names[i], author[i]);
     }
   }
 }
@@ -297,22 +301,19 @@ int get_distance(const char *key) {
     current = de_queue(queue);
 
     coauthors = current->coauthors;
+    for (i = 0; i < coauthors->table_size; i++) {
+      coauthor = coauthors->table[i];
+      while (coauthor) {
+        next = coauthor->value;
 
-    if (coauthors) {
-      for (i = 0; i < coauthors->table_size; i++) {
-        coauthor = coauthors->table[i];
-        while (coauthor) {
-          next = get_map_value(authors, coauthor->value);
-
-          if (!next->visited) {
-            if (next->erdos_num > current->erdos_num + 1) {
-              next->erdos_num = current->erdos_num + 1;
-            }
-            en_queue(queue, next);
+        if (!next->visited) {
+          if (next->erdos_num > current->erdos_num + 1) {
+            next->erdos_num = current->erdos_num + 1;
           }
-
-          coauthor = coauthor->next;
+          en_queue(queue, next);
         }
+
+        coauthor = coauthor->next;
       }
     }
 
