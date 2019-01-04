@@ -127,6 +127,34 @@ hash_set_t *create_set() {
   return set;
 }
 
+void clear_set(hash_set_t *set) {
+  int i;
+  hash_set_node_t *current, *previous;
+
+  for (i = 0; i < set->table_size; ++i) {
+    current = set->table[i];
+
+    while (current) {
+      previous = current, current = current->next;
+      free(previous);
+    }
+
+    set->table[i] = NULL;
+  }
+}
+
+void free_set(hash_set_t *set) {
+  clear_set(set);
+
+  if (set->table) {
+    free(set->table);
+    set->table = NULL;
+  }
+
+  free(set);
+  set = NULL;
+}
+
 int add_set_node(hash_set_t *set, const char *key, author_t *value) {
   int hash, index, len;
   hash_set_node_t *node;
@@ -180,7 +208,7 @@ void clear_map(hash_map_t *map) {
 
     while (node) {
       previous = node, node = node->next;
-      free(previous->value->coauthors);
+      free_set(previous->value->coauthors);
       free(previous->value);
       free(previous);
     }
@@ -332,9 +360,14 @@ int main() {
   int s, i, j, k, v;
   char buff[BUFFER_LENGTH];
 
+  authors = create_map();
+  queue = create_queue(MAX_NUMBER_OF_AUTHORS * MAX_LINKS);
+
   for (scanf("%d", &scenarios), s = 1; s <= scenarios; s++) {
-    authors = create_map();
-    queue = create_queue(MAX_NUMBER_OF_AUTHORS * MAX_LINKS);
+    if (s > 1) {
+      clear_map(authors);
+      clear_queue(queue);
+    }
 
     scanf("%d %d", &P, &N), gets(buff);
     for (i = 0; i < P; i++) {
