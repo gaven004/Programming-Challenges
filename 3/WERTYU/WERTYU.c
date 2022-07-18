@@ -1,6 +1,6 @@
 /*
- * The 3n + 1 Problem
- * PC/UVa IDs: 110101/100
+ * WERTYU
+ * PC/UVa IDs: 110301/10082
  */
 
 #include <stdio.h>
