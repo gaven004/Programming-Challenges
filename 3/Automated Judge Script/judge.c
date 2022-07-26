@@ -20,7 +20,7 @@
  * 系统的答案是 Presentation·Error
  */
 
-/* 
+/*
  * 有处理的方式是合并答案的多行为一行后，再去比较，这样避免换行的麻烦
  */
 
@@ -35,129 +35,81 @@
 #define PRESENTATION_ERROR 1
 #define WRONG_ANSWER 0
 
-int judge(char expected[MAX_LINES][BUFFER_LENGTH], char actual[MAX_LINES][BUFFER_LENGTH], int n, int m)
+void readdata(char *buff, int lines)
 {
-    int i, j;
-    int result = ACCEPTED;
-    char *pExpected, *pActual;
+    char c;
 
-    i = 0, j = 0;
-    pExpected = expected[i], pActual = actual[j];
-
-    while (*pExpected && *pActual)
+    while (lines && (c = getchar()) != EOF)
     {
-        if (*pExpected == *pActual)
-        {
-            pExpected++;
-            if (*pExpected == 0)
-            {
-                i++;
-                if (i < n)
-                {
-                    pExpected = expected[i];
-                }
-            }
+        *buff = c;
+        buff++;
 
-            pActual++;
-            if (*pActual == 0)
-            {
-                j++;
-                if (j < m)
-                {
-                    pActual = actual[j];
-                }
-            }
+        if (c == '\n')
+        {
+            lines--;
+        }
+    }
+
+    *buff = '\0';
+}
+
+int judge(char *expected, char *actual)
+{
+    int result = ACCEPTED;
+
+    while (*expected && *actual)
+    {
+        if (*expected == *actual)
+        {
+            expected++;
+            actual++;
         }
         else
         {
             result = PRESENTATION_ERROR;
 
-            if (isnumber(*pExpected) && isnumber(*pActual))
+            if (isdigit(*expected) && isdigit(*actual))
             {
                 return WRONG_ANSWER;
             }
 
-            if (!isnumber(*pExpected))
+            if (!isdigit(*expected))
             {
-                pExpected++;
-
-                if (*pExpected == 0)
-                {
-                    i++;
-
-                    if (i < n)
-                    {
-                        pExpected = expected[i];
-                    }
-                }
+                expected++;
             }
 
-            if (!isnumber(*pActual))
+            if (!isdigit(*actual))
             {
-                pActual++;
-
-                if (*pActual == 0)
-                {
-                    j++;
-
-                    if (j < m)
-                    {
-                        pActual = actual[j];
-                    }
-                }
+                actual++;
             }
         }
     }
 
-    /*
-     * Has more lines in correct answer
-     */
-    if (*pExpected)
+    if (*expected)
     {
         result = PRESENTATION_ERROR;
 
-        while (*pExpected)
+        while (*expected)
         {
-            if (isnumber(*pExpected))
+            if (isdigit(*expected))
             {
                 return WRONG_ANSWER;
             }
-
-            pExpected++;
-            if (*pExpected == 0)
-            {
-                i++;
-                if (i < n)
-                {
-                    pExpected = expected[i];
-                }
-            }
+            expected++;
         }
     }
 
-    /*
-     * Has more lines in actual
-     */
-    if (*pActual)
+    if (*actual)
     {
         result = PRESENTATION_ERROR;
 
-        while (*pActual)
+        while (*actual)
         {
-            if (isnumber(*pActual))
+            if (isdigit(*actual))
             {
                 return WRONG_ANSWER;
             }
-
-            pActual++;
-            if (*pActual == 0)
-            {
-                j++;
-                if (j < m)
-                {
-                    pActual = actual[j];
-                }
-            }
+            actual++;
         }
     }
 
@@ -170,27 +122,21 @@ int main(void)
     int n, m;
     int i;
     char buff[BUFFER_LENGTH];
-    char expected[MAX_LINES][BUFFER_LENGTH];
-    char actual[MAX_LINES][BUFFER_LENGTH];
+    char expected[MAX_LINES * BUFFER_LENGTH];
+    char actual[MAX_LINES * BUFFER_LENGTH];
 
-    for (fgets(buff, BUFFER_LENGTH, stdin), sscanf(buff, "%d", &n);
+    for (scanf("%d", &n), getchar();
          n;
-         fgets(buff, BUFFER_LENGTH, stdin), sscanf(buff, "%d", &n))
+         scanf("%d", &n), getchar())
     {
         /* read data */
-        for (i = 0; i < n; i++)
-        {
-            fgets(expected[i], BUFFER_LENGTH, stdin);
-        }
+        readdata(expected, n);
 
-        fgets(buff, BUFFER_LENGTH, stdin), sscanf(buff, "%d", &m);
-        for (i = 0; i < m; i++)
-        {
-            fgets(actual[i], BUFFER_LENGTH, stdin);
-        }
+        scanf("%d", &m), getchar();
+        readdata(actual, m);
 
         /* processing */
-        i = judge(expected, actual, n, m);
+        i = judge(expected, actual);
 
         /* output */
         switch (i)
