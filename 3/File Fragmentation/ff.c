@@ -45,6 +45,8 @@ int is_a_solution(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH],
 {
     int i;
 
+    printf("is_a_solution: fragments_count: %d, file_size: %d, k: %d, d: %d\n", fragments_count, file_size, k, d);
+
     for (i = 0; i < fragments_count; i++)
     {
         if (solution[i] == fragments_count)
@@ -70,6 +72,9 @@ int process(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH], /* 碎片数
     char expected[BUFFER_LENGTH];
     char actual[BUFFER_LENGTH];
 
+    printf("process: fragments_count: %d, file_size: %d, k: %d, d: %d\n", fragments_count, file_size, k, d);
+
+    puts("是否完整解");
     /* 是否完整解 */
     if (is_a_solution(fragments, length_of_fragments, solution, fragments_count, file_size, k, d))
     {
@@ -83,15 +88,19 @@ int process(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH], /* 碎片数
         concat(expected, fragments, 0, solution[0]);
     }
 
+    puts("构建当前K下的可行解");
+
     /* 构建当前K下的可行解 */
     for (i = fragments_count - 1; i > k; i--)
     {
+        puts("碎片合并后长度是否符合");
         /* 碎片合并后长度是否符合 */
         if (l + length_of_fragments[i] < file_size)
         {
             break;
         }
 
+        puts("碎片是否已使用");
         /* 碎片是否已使用 */
         if (solution[i] < fragments_count)
         {
@@ -110,6 +119,7 @@ int process(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH], /* 碎片数
             }
         }
 
+        puts("测试条件通过，得到一个可行候选解");
         /* 测试条件通过，得到一个可行候选解 */
         if (d > 0)
         {
@@ -122,11 +132,13 @@ int process(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH], /* 碎片数
             solution[i] = k;
         }
 
+        puts("递归寻找下一层的解");
         /* 递归寻找下一层的解 */
         process(fragments, length_of_fragments, solution, fragments_count, file_size, k + 1, 1);
 
         if (finished)
         {
+            puts("若得到完整解，则可退出");
             /* 若得到完整解，则可退出 */
             return 1;
         }
@@ -138,10 +150,12 @@ int process(char fragments[MAX_NUMBER_OF_FILES * 2][BUFFER_LENGTH], /* 碎片数
 
     if (d > 0)
     {
+        puts("在当前情况下，碎片K放在组合中的前面无法得到完整解，尝试放在后面");
         /* 在当前情况下，碎片K放在组合中的前面无法得到完整解，尝试放在后面 */
-        process(fragments, length_of_fragments, solution, fragments_count, file_size, k, -d);
+        process(fragments, length_of_fragments, solution, fragments_count, file_size, k, -1);
     }
 
+    puts("在当前情况下，碎片K，放在组合的前面和后面，都无法得到完整解，回退一步，在上一层的下一个可行候选解再开始");
     /* 在当前情况下，碎片K，放在组合的前面和后面，都无法得到完整解，回退一步，在上一层的下一个可行候选解再开始 */
     return 0;
 }
@@ -172,11 +186,15 @@ int main(void)
         /* processing */
         qsort(fragments, fragments_count, BUFFER_LENGTH, (int (*)(const void *, const void *))cmp);
 
+        puts("----");
         for (i = 0; i < fragments_count; i++)
         {
+            puts(fragments[i]);
             length_of_fragments[i] = strlen(fragments[i]);
             solution[i] = fragments_count;
         }
+        puts("----");
+        finished = 0;
         file_size = length_of_fragments[0] + length_of_fragments[fragments_count - 1];
 
         process(fragments, length_of_fragments, solution, fragments_count, file_size, 0, 1);
@@ -185,17 +203,20 @@ int main(void)
         // concat(buff, fragments, 0, solution[0]);
         // puts(buff);
 
-        puts("----");
+        puts("****");
         for (i = 0; i < fragments_count; i++)
         {
-            if (solution[i] < fragments_count)
-            {
-                concat(buff, fragments, i, solution[i]);
-                puts(buff);
-                solution[solution[i]] = fragments_count;
-                solution[i] = fragments_count;
-            }
+            printf("%d\t%d\n", i, solution[i]);
+
+            // if (solution[i] < fragments_count)
+            // {
+            //     concat(buff, fragments, i, solution[i]);
+            //     puts(buff);
+            //     solution[solution[i]] = fragments_count;
+            //     solution[i] = fragments_count;
+            // }
         }
+        puts("****");
 
         if (cases)
         {
