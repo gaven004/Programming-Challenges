@@ -13,6 +13,11 @@
 #define MAX_LENGTH_OF_WORD 16
 #define MAX_NUMBER_OF_WORDS 25143
 
+typedef struct _node {
+  int element;
+  struct _node *next;
+} node;
+
 typedef struct
 {
     int top;
@@ -79,13 +84,19 @@ int dequeue(queue *q)
     return (x);
 }
 
-int empty(queue *q)
+int is_empty_queue(queue *q)
 {
     if (q->count <= 0)
         return (1);
     else
         return (0);
 }
+
+char dict[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
+int word_cnt_by_len[MAX_LENGTH_OF_WORD];
+char *p_subdict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
+char *p_adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
+int solution[MAX_NUMBER_OF_WORDS];
 
 int readline(char *s)
 {
@@ -108,11 +119,16 @@ int is_doublet(const char *s, const char *t)
 {
     int d = 0;
 
-    while (*s && *t && d < 2)
+    while (*s && *t)
     {
         if (*s != *t)
         {
             d++;
+
+            if (d > 1)
+            {
+                return 0;
+            }
         }
 
         s++;
@@ -122,26 +138,34 @@ int is_doublet(const char *s, const char *t)
     return d == 1;
 }
 
-int search(const char *key,
-           const char base[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1],
-           int num,
-           int width)
+int search(const char *key, int l)
 {
-    void *result = bsearch(key, base, num, width, (int (*)(const void *, const void *))strcmp);
+    int i, w;
 
-    return result ? ((void *)result - (void *)base) / width : -1;
+    w = word_cnt_by_len[l];
+    for (i = 0; i < w; i++)
+    {
+        if (strcmp(key, p_subdict[l][i]) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
-int find_path(char adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS], int start, int end, int width, int solution[MAX_NUMBER_OF_WORDS])
+int find_path(int l, int start, int end)
 {
-    int discovered[width];
+    int w = word_cnt_by_len[l];
+    int discovered[w];
+    char *base = p_adjacency[l];
 
     int i, v;
 
     queue q;
     init_queue(&q);
 
-    for (i = 0; i < width; i++)
+    for (i = 0; i < w; i++)
     {
         discovered[i] = 0;
         solution[i] = -1;
@@ -150,13 +174,13 @@ int find_path(char adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS], int start
     enqueue(&q, start);
     discovered[start] = 1;
 
-    while (!empty(&q))
+    while (!is_empty_queue(&q))
     {
         v = dequeue(&q);
 
-        for (i = 0; i < width; i++)
+        for (i = 0; i < w; i++)
         {
-            if (adjacency[v][i])
+            if (i != v && *(base + v * w + i))
             {
                 if (i == end)
                 {
@@ -177,10 +201,6 @@ int find_path(char adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS], int start
     return 0;
 }
 
-char dict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
-int word_cnt_by_len[MAX_LENGTH_OF_WORD];
-char adjacency[MAX_LENGTH_OF_WORD][MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
-
 int main(void)
 {
     char buff[BUFFER_LENGTH];
@@ -188,37 +208,41 @@ int main(void)
     char word2[BUFFER_LENGTH];
 
     int cases;
-    int i, j, l;
+    int i, j, l, w;
     int start, end;
 
     stack s;
-    int solution[MAX_NUMBER_OF_WORDS];
 
     for (i = 0; i < MAX_LENGTH_OF_WORD; i++)
     {
         word_cnt_by_len[i] = 0;
     }
 
-    while ((l = readline(buff)))
+    i = 0;
+    while ((l = readline(dict[i])))
     {
         l--;
-        i = word_cnt_by_len[l];
-        strcpy(dict[l][i], buff);
-        word_cnt_by_len[l] = i + 1;
+        j = word_cnt_by_len[l];
+        p_subdict[l][j] = dict[i];
+        word_cnt_by_len[l] = j + 1;
+        i++;
     }
 
     for (l = 0; l < MAX_LENGTH_OF_WORD; l++)
     {
-        if (word_cnt_by_len[l] > 1)
+        w = word_cnt_by_len[l];
+        if (w > 1)
         {
-            qsort(dict[l], word_cnt_by_len[l], MAX_LENGTH_OF_WORD + 1, (int (*)(const void *, const void *))strcmp);
+            /* qsort(p_subdict[l], w, sizeof(char *), (int (*)(const void *, const void *))strcmp); */
 
-            for (i = 0; i < word_cnt_by_len[l] - 1; i++)
+            p_adjacency[l] = (char *)malloc(w * w * sizeof(char));
+
+            for (i = 0; i < w - 1; i++)
             {
-                for (j = i + 1; j < word_cnt_by_len[l]; j++)
+                for (j = i + 1; j < w; j++)
                 {
-                    adjacency[l][i][j] = is_doublet(dict[l][i], dict[l][j]);
-                    adjacency[l][j][i] = adjacency[l][i][j];
+                    *(p_adjacency[l] + i * w + j) = is_doublet(p_subdict[l][i], p_subdict[l][j]);
+                    *(p_adjacency[l] + j * w + i) = *(p_adjacency[l] + i * w + j);
                 }
             }
         }
@@ -242,8 +266,14 @@ int main(void)
         }
 
         l--;
-        start = search(word1, dict[l], word_cnt_by_len[l], MAX_LENGTH_OF_WORD + 1);
-        end = search(word2, dict[l], word_cnt_by_len[l], MAX_LENGTH_OF_WORD + 1);
+        if (word_cnt_by_len[l] < 2)
+        {
+            puts("No solution.");
+            continue;
+        }
+
+        start = search(word1, l);
+        end = search(word2, l);
 
         if (start < 0 || end < 0)
         {
@@ -251,7 +281,8 @@ int main(void)
             continue;
         }
 
-        i = find_path(adjacency[l], start, end, word_cnt_by_len[l], solution);
+        i = find_path(l, start, end);
+
         if (i)
         {
             init_stack(&s);
@@ -267,7 +298,7 @@ int main(void)
             while (!is_empty_stack(&s))
             {
                 j = pop(&s);
-                puts(dict[l][j]);
+                puts(p_subdict[l][j]);
             }
         }
         else
