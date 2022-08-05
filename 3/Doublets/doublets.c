@@ -13,10 +13,17 @@
 #define MAX_LENGTH_OF_WORD 16
 #define MAX_NUMBER_OF_WORDS 25143
 
-typedef struct _node {
-  int element;
-  struct _node *next;
+typedef struct _node
+{
+    int element;
+    struct _node *next;
 } node;
+
+typedef struct
+{
+    struct _node *head;
+    struct _node *tail;
+} adj_info;
 
 typedef struct
 {
@@ -95,7 +102,7 @@ int is_empty_queue(queue *q)
 char dict[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
 int word_cnt_by_len[MAX_LENGTH_OF_WORD];
 char *p_subdict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
-char *p_adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
+adj_info adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
 int solution[MAX_NUMBER_OF_WORDS];
 
 int readline(char *s)
@@ -138,6 +145,40 @@ int is_doublet(const char *s, const char *t)
     return d == 1;
 }
 
+void add_adjacency(int l, int i, int j)
+{
+    node *ni = (node *)malloc(sizeof(node));
+    node *nj = (node *)malloc(sizeof(node));
+
+    ni->element = j;
+    ni->next = NULL;
+
+    nj->element = i;
+    nj->next = NULL;
+
+    if (adjacency[l][i].tail == NULL)
+    {
+        adjacency[l][i].head = ni;
+        adjacency[l][i].tail = ni;
+    }
+    else
+    {
+        adjacency[l][i].tail->next = ni;
+        adjacency[l][i].tail = ni;
+    }
+
+    if (adjacency[l][j].tail == NULL)
+    {
+        adjacency[l][j].head = nj;
+        adjacency[l][j].tail = nj;
+    }
+    else
+    {
+        adjacency[l][j].tail->next = nj;
+        adjacency[l][j].tail = nj;
+    }
+}
+
 int search(const char *key, int l)
 {
     int i, w;
@@ -158,7 +199,6 @@ int find_path(int l, int start, int end)
 {
     int w = word_cnt_by_len[l];
     int discovered[w];
-    char *base = p_adjacency[l];
 
     int i, v;
 
@@ -178,23 +218,25 @@ int find_path(int l, int start, int end)
     {
         v = dequeue(&q);
 
-        for (i = 0; i < w; i++)
-        {
-            if (i != v && *(base + v * w + i))
-            {
-                if (i == end)
-                {
-                    solution[i] = v;
-                    return 1;
-                }
+        adj_info ai = adjacency[l][v];
+        node *current = ai.head;
 
-                if (!discovered[i])
-                {
-                    enqueue(&q, i);
-                    discovered[i] = 1;
-                    solution[i] = v;
-                }
+        while (current != NULL)
+        {
+            if (current->element == end)
+            {
+                solution[end] = v;
+                return 1;
             }
+
+            if (!discovered[current->element])
+            {
+                enqueue(&q, current->element);
+                discovered[current->element] = 1;
+                solution[current->element] = v;
+            }
+
+            current = current->next;
         }
     }
 
@@ -235,14 +277,20 @@ int main(void)
         {
             /* qsort(p_subdict[l], w, sizeof(char *), (int (*)(const void *, const void *))strcmp); */
 
-            p_adjacency[l] = (char *)malloc(w * w * sizeof(char));
+            for (i = 0; i < w; i++)
+            {
+                adjacency[l][i].head = NULL;
+                adjacency[l][i].tail = NULL;
+            }
 
             for (i = 0; i < w - 1; i++)
             {
                 for (j = i + 1; j < w; j++)
                 {
-                    *(p_adjacency[l] + i * w + j) = is_doublet(p_subdict[l][i], p_subdict[l][j]);
-                    *(p_adjacency[l] + j * w + i) = *(p_adjacency[l] + i * w + j);
+                    if (is_doublet(p_subdict[l][i], p_subdict[l][j]))
+                    {
+                        add_adjacency(l, i, j);
+                    }
                 }
             }
         }
