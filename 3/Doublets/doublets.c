@@ -270,13 +270,11 @@ int main(void)
         i++;
     }
 
-    for (l = 0; l < MAX_LENGTH_OF_WORD; l++)
+    for (l = 1; l < MAX_LENGTH_OF_WORD; l++)
     {
         w = word_cnt_by_len[l];
         if (w > 1)
         {
-            /* qsort(p_subdict[l], w, sizeof(char *), (int (*)(const void *, const void *))strcmp); */
-
             for (i = 0; i < w; i++)
             {
                 adjacency[l][i].head = NULL;
@@ -328,6 +326,14 @@ int main(void)
             puts("No solution.");
             continue;
         }
+
+        if (l == 0)
+        {
+            puts(word1);
+            puts(word2);
+            continue;
+        }
+        
 
         i = find_path(l, start, end);
 
