@@ -145,6 +145,24 @@ int is_doublet(const char *s, const char *t)
     return d == 1;
 }
 
+int count_diff(const char *s, const char *t)
+{
+    int d = 0;
+
+    while (*s && *t)
+    {
+        if (*s != *t)
+        {
+            d++;
+        }
+
+        s++;
+        t++;
+    }
+
+    return d == 1;
+}
+
 void add_adjacency(int l, int i, int j)
 {
     node *ni = (node *)malloc(sizeof(node));
@@ -249,6 +267,8 @@ int main(void)
     char word1[BUFFER_LENGTH];
     char word2[BUFFER_LENGTH];
 
+    int build_graph[MAX_LENGTH_OF_WORD];
+
     int cases;
     int i, j, l, w;
     int start, end;
@@ -258,6 +278,7 @@ int main(void)
     for (i = 0; i < MAX_LENGTH_OF_WORD; i++)
     {
         word_cnt_by_len[i] = 0;
+        build_graph[i] = 0;
     }
 
     i = 0;
@@ -268,30 +289,6 @@ int main(void)
         p_subdict[l][j] = dict[i];
         word_cnt_by_len[l] = j + 1;
         i++;
-    }
-
-    for (l = 1; l < MAX_LENGTH_OF_WORD; l++)
-    {
-        w = word_cnt_by_len[l];
-        if (w > 1)
-        {
-            for (i = 0; i < w; i++)
-            {
-                adjacency[l][i].head = NULL;
-                adjacency[l][i].tail = NULL;
-            }
-
-            for (i = 0; i < w - 1; i++)
-            {
-                for (j = i + 1; j < w; j++)
-                {
-                    if (is_doublet(p_subdict[l][i], p_subdict[l][j]))
-                    {
-                        add_adjacency(l, i, j);
-                    }
-                }
-            }
-        }
     }
 
     cases = 0;
@@ -333,7 +330,29 @@ int main(void)
             puts(word2);
             continue;
         }
-        
+
+        if (!build_graph[l])
+        {
+            build_graph[l] = 1;
+
+            w = word_cnt_by_len[l];
+            for (i = 0; i < w; i++)
+            {
+                adjacency[l][i].head = NULL;
+                adjacency[l][i].tail = NULL;
+            }
+
+            for (i = 0; i < w - 1; i++)
+            {
+                for (j = i + 1; j < w; j++)
+                {
+                    if (is_doublet(p_subdict[l][i], p_subdict[l][j]))
+                    {
+                        add_adjacency(l, i, j);
+                    }
+                }
+            }
+        }
 
         i = find_path(l, start, end);
 
