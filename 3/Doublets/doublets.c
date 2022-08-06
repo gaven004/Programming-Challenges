@@ -145,24 +145,6 @@ int is_doublet(const char *s, const char *t)
     return d == 1;
 }
 
-int count_diff(const char *s, const char *t)
-{
-    int d = 0;
-
-    while (*s && *t)
-    {
-        if (*s != *t)
-        {
-            d++;
-        }
-
-        s++;
-        t++;
-    }
-
-    return d == 1;
-}
-
 void add_adjacency(int l, int i, int j)
 {
     node *ni = (node *)malloc(sizeof(node));
