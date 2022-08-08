@@ -50,11 +50,33 @@ int pop(stack *s)
 
 typedef struct
 {
-    int q[MAX_NUMBER_OF_WORDS + 1];
+    int *items;
     int first;
     int last;
     int count;
+    int capacity;
 } queue;
+
+queue *create_queue(int capacity)
+{
+    queue *q = (queue *)malloc(sizeof(queue));
+    if (!q)
+    {
+        fprintf(stderr, "Error: Out of space!!! Exiting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    q->capacity = capacity;
+    q->count = 0, q->first = 0, q->last = 0;
+    q->items = (int *)malloc(q->capacity * sizeof(int));
+    if (!q->items)
+    {
+        fprintf(stderr, "Error: Out of space!!! Exiting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return q;
+}
 
 void init_queue(queue *q)
 {
@@ -65,14 +87,23 @@ void init_queue(queue *q)
 
 void enqueue(queue *q, int x)
 {
-    q->q[q->last] = x;
+    if (q->count + 1 >= q->capacity)
+    {
+        q->capacity = q->capacity * 2;
+        int *dest = (int *)malloc(q->capacity * sizeof(int));
+        memcpy(dest, q->items, q->count * sizeof(int));
+        free(q->items);
+        q->items = dest;
+    }
+
+    q->items[q->last] = x;
     q->last = q->last + 1;
     q->count = q->count + 1;
 }
 
 int dequeue(queue *q)
 {
-    int x = q->q[q->first];
+    int x = q->items[q->first];
     q->first = (q->first + 1);
     q->count = q->count - 1;
     return (x);
@@ -86,10 +117,10 @@ int is_empty_queue(queue *q)
 char dict[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
 int word_cnt_by_len[MAX_LENGTH_OF_WORD];
 char *p_subdict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS + 1];
-adj_info adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
+queue *adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
 int solution[MAX_NUMBER_OF_WORDS];
 int discovered[MAX_NUMBER_OF_WORDS];
-queue q;
+queue *q;
 
 int readline(char *s)
 {
@@ -133,36 +164,8 @@ int is_doublet(const char *s, const char *t)
 
 void add_adjacency(int l, int i, int j)
 {
-    node *ni = (node *)malloc(sizeof(node));
-    node *nj = (node *)malloc(sizeof(node));
-
-    ni->element = j;
-    ni->next = NULL;
-
-    nj->element = i;
-    nj->next = NULL;
-
-    if (adjacency[l][i].tail == NULL)
-    {
-        adjacency[l][i].head = ni;
-        adjacency[l][i].tail = ni;
-    }
-    else
-    {
-        adjacency[l][i].tail->next = ni;
-        adjacency[l][i].tail = ni;
-    }
-
-    if (adjacency[l][j].tail == NULL)
-    {
-        adjacency[l][j].head = nj;
-        adjacency[l][j].tail = nj;
-    }
-    else
-    {
-        adjacency[l][j].tail->next = nj;
-        adjacency[l][j].tail = nj;
-    }
+    enqueue(adjacency[l][i], j);
+    enqueue(adjacency[l][j], i);
 }
 
 int search(const char *key, int l)
@@ -187,38 +190,37 @@ int find_path(int l, int start, int end)
 
     int i, v;
 
-    init_queue(&q);
+    init_queue(q);
 
     i = sizeof(int) * w;
     memset(discovered, 0, i);
     memset(solution, 255, i);
 
-    enqueue(&q, start);
+    enqueue(q, start);
     discovered[start] = 1;
 
-    while (!is_empty_queue(&q))
+    while (!is_empty_queue(q))
     {
-        v = dequeue(&q);
+        v = dequeue(q);
 
-        adj_info ai = adjacency[l][v];
-        node *current = ai.head;
+        queue *q_adj = adjacency[l][v];
 
-        while (current != NULL)
+        while (!is_empty_queue(q_adj))
         {
-            if (current->element == end)
+            i = dequeue(q_adj);
+
+            if (i == end)
             {
                 solution[end] = v;
                 return 1;
             }
 
-            if (!discovered[current->element])
+            if (!discovered[i])
             {
-                enqueue(&q, current->element);
-                discovered[current->element] = 1;
-                solution[current->element] = v;
+                enqueue(q, i);
+                discovered[i] = 1;
+                solution[i] = v;
             }
-
-            current = current->next;
         }
     }
 
@@ -238,6 +240,8 @@ int main(void)
     int start, end;
 
     stack s;
+
+    q = create_queue(MAX_NUMBER_OF_WORDS);
 
     memset(word_cnt_by_len, 0, sizeof(word_cnt_by_len));
     memset(build_graph, 0, sizeof(build_graph));
@@ -304,8 +308,7 @@ int main(void)
             w = word_cnt_by_len[l];
             for (i = 0; i < w; i++)
             {
-                adjacency[l][i].head = NULL;
-                adjacency[l][i].tail = NULL;
+                adjacency[l][i] = create_queue(64);
             }
 
             for (i = 0; i < w - 1; i++)
