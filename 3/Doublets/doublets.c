@@ -59,51 +59,37 @@ typedef struct
 void init_queue(queue *q)
 {
     q->first = 0;
-    q->last = MAX_NUMBER_OF_WORDS - 1;
+    q->last = 0;
     q->count = 0;
 }
 
 void enqueue(queue *q, int x)
 {
-    if (q->count >= MAX_NUMBER_OF_WORDS)
-        printf("Warning: queue overflow enqueue x=%d\n", x);
-    else
-    {
-        q->last = (q->last + 1) % MAX_NUMBER_OF_WORDS;
-        q->q[q->last] = x;
-        q->count = q->count + 1;
-    }
+    q->q[q->last] = x;
+    q->last = q->last + 1;
+    q->count = q->count + 1;
 }
 
 int dequeue(queue *q)
 {
-    int x;
-    if (q->count <= 0)
-    {
-        printf("Warning: empty queue dequeue.\n");
-    }
-    else
-    {
-        x = q->q[q->first];
-        q->first = (q->first + 1) % MAX_NUMBER_OF_WORDS;
-        q->count = q->count - 1;
-    }
+    int x = q->q[q->first];
+    q->first = (q->first + 1);
+    q->count = q->count - 1;
     return (x);
 }
 
 int is_empty_queue(queue *q)
 {
-    if (q->count <= 0)
-        return (1);
-    else
-        return (0);
+    return (q->count <= 0);
 }
 
 char dict[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
 int word_cnt_by_len[MAX_LENGTH_OF_WORD];
-char *p_subdict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
+char *p_subdict[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS + 1];
 adj_info adjacency[MAX_LENGTH_OF_WORD][MAX_NUMBER_OF_WORDS];
 int solution[MAX_NUMBER_OF_WORDS];
+int discovered[MAX_NUMBER_OF_WORDS];
+queue q;
 
 int readline(char *s)
 {
@@ -126,7 +112,7 @@ int is_doublet(const char *s, const char *t)
 {
     int d = 0;
 
-    while (*s && *t)
+    while (*s)
     {
         if (*s != *t)
         {
@@ -184,32 +170,28 @@ int search(const char *key, int l)
     int i, w;
 
     w = word_cnt_by_len[l];
-    for (i = 0; i < w; i++)
-    {
-        if (strcmp(key, p_subdict[l][i]) == 0)
-        {
-            return i;
-        }
-    }
+    p_subdict[l][w] = key;
 
-    return -1;
+    i = -1;
+    do
+    {
+        i++;
+    } while (strcmp(key, p_subdict[l][i]) != 0);
+
+    return i < w ? i : -1;
 }
 
 int find_path(int l, int start, int end)
 {
     int w = word_cnt_by_len[l];
-    int discovered[w];
 
     int i, v;
 
-    queue q;
     init_queue(&q);
 
-    for (i = 0; i < w; i++)
-    {
-        discovered[i] = 0;
-        solution[i] = -1;
-    }
+    i = sizeof(int) * w;
+    memset(discovered, 0, i);
+    memset(solution, 255, i);
 
     enqueue(&q, start);
     discovered[start] = 1;
@@ -257,11 +239,8 @@ int main(void)
 
     stack s;
 
-    for (i = 0; i < MAX_LENGTH_OF_WORD; i++)
-    {
-        word_cnt_by_len[i] = 0;
-        build_graph[i] = 0;
-    }
+    memset(word_cnt_by_len, 0, sizeof(word_cnt_by_len));
+    memset(build_graph, 0, sizeof(build_graph));
 
     i = 0;
     while ((l = readline(dict[i])))
@@ -274,7 +253,7 @@ int main(void)
     }
 
     cases = 0;
-    while (scanf("%s", word1) != EOF && scanf("%s", word2) != EOF)
+    while (scanf("%s %s", word1, word2) != EOF)
     {
         if (cases)
         {
@@ -298,9 +277,14 @@ int main(void)
         }
 
         start = search(word1, l);
-        end = search(word2, l);
+        if (start < 0)
+        {
+            puts("No solution.");
+            continue;
+        }
 
-        if (start < 0 || end < 0)
+        end = search(word2, l);
+        if (end < 0)
         {
             puts("No solution.");
             continue;

@@ -1,0 +1,703 @@
+
+Read Line, Elapsed: 11935
+words: beer roof
+start: 107, end: 1274
+
+search Line, l: 3, Elapsed: 21
+
+Build graph, l: 3, w: 1778, Elapsed: 26031
+
+find path, Elapsed: 69
+beer
+bear
+bead
+read
+road
+rood
+roof
+
+Output, Elapsed: 20
+
+words: a z
+start: 0, end: 25
+
+search Line, l: 0, Elapsed: 2
+a
+z
+
+words: abase agave
+start: 1, end: 38
+
+search Line, l: 4, Elapsed: 4
+
+Build graph, l: 4, w: 2415, Elapsed: 30970
+
+find path, Elapsed: 1
+abase
+abate
+agate
+agave
+
+Output, Elapsed: 1
+
+words: abash agave
+start: 2, end: 38
+
+search Line, l: 4, Elapsed: 1
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 1
+abash
+abase
+abate
+agate
+agave
+
+Output, Elapsed: 1
+
+words: abbe quay
+start: 0, end: 1205
+
+search Line, l: 3, Elapsed: 5
+
+Build graph, l: 3, w: 2415, Elapsed: 0
+
+find path, Elapsed: 108
+abbe
+able
+aile
+bile
+bole
+bolt
+boat
+blat
+slat
+slit
+suit
+quit
+quid
+quad
+quay
+
+Output, Elapsed: 2
+
+words: acorn runic
+start: 14, end: 1707
+
+search Line, l: 4, Elapsed: 6
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 55
+acorn
+scorn
+score
+shore
+chore
+chose
+chase
+cease
+tease
+terse
+verse
+verge
+serge
+surge
+purge
+purse
+parse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 3
+
+words: adobe runic
+start: 26, end: 1707
+
+search Line, l: 4, Elapsed: 7
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 51
+adobe
+adore
+adorn
+acorn
+scorn
+score
+shore
+chore
+chose
+chase
+cease
+tease
+terse
+verse
+verge
+serge
+surge
+purge
+purse
+parse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 3
+
+words: aloud runic
+start: 71, end: 1707
+
+search Line, l: 4, Elapsed: 7
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 55
+aloud
+cloud
+clout
+flout
+float
+bloat
+bleat
+blest
+blast
+beast
+least
+lease
+tease
+terse
+verse
+verge
+serge
+surge
+purge
+purse
+parse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 3
+
+words: badge runic
+start: 157, end: 1707
+
+search Line, l: 4, Elapsed: 7
+
+Build graph, l: 4, w: 2415, Elapsed: 1
+
+find path, Elapsed: 55
+badge
+budge
+bulge
+bilge
+binge
+singe
+since
+wince
+winch
+cinch
+conch
+couch
+cough
+rough
+rouge
+rouse
+louse
+loose
+noose
+noise
+poise
+posse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 2
+
+words: barge runic
+start: 167, end: 1707
+
+search Line, l: 4, Elapsed: 7
+
+Build graph, l: 4, w: 2415, Elapsed: 1
+
+find path, Elapsed: 51
+barge
+badge
+budge
+bulge
+bilge
+binge
+singe
+since
+wince
+winch
+cinch
+conch
+couch
+cough
+rough
+rouge
+rouse
+louse
+loose
+noose
+noise
+poise
+posse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 2
+
+words: barre runic
+start: 169, end: 1707
+
+search Line, l: 4, Elapsed: 6
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 49
+barre
+barge
+badge
+budge
+bulge
+bilge
+binge
+singe
+since
+wince
+winch
+cinch
+conch
+couch
+cough
+rough
+rouge
+rouse
+louse
+loose
+noose
+noise
+poise
+posse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 2
+
+words: runic badge
+start: 1707, end: 157
+
+search Line, l: 4, Elapsed: 9
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 49
+runic
+tunic
+tonic
+monic
+manic
+mania
+manna
+canna
+canny
+candy
+handy
+hardy
+harry
+parry
+party
+pasty
+paste
+passe
+posse
+poise
+noise
+noose
+loose
+louse
+rouse
+rouge
+rough
+cough
+couch
+conch
+cinch
+winch
+wince
+since
+singe
+binge
+bilge
+bulge
+budge
+badge
+
+Output, Elapsed: 4
+
+words: quack belch
+start: 1599, end: 203
+
+search Line, l: 4, Elapsed: 8
+
+Build graph, l: 4, w: 2415, Elapsed: 1
+
+find path, Elapsed: 20
+quack
+quark
+quart
+quirt
+quilt
+guilt
+guile
+guide
+glide
+elide
+elite
+elate
+plate
+place
+peace
+peach
+beach
+belch
+
+Output, Elapsed: 1
+
+words: belch quack
+start: 203, end: 1599
+
+search Line, l: 4, Elapsed: 6
+
+Build graph, l: 4, w: 2415, Elapsed: 1
+
+find path, Elapsed: 45
+belch
+beach
+peach
+peace
+place
+plate
+elate
+elite
+elide
+glide
+guide
+guile
+guilt
+quilt
+quirt
+quart
+quark
+quack
+
+Output, Elapsed: 44
+
+words: belie quack
+start: 204, end: 1599
+
+search Line, l: 4, Elapsed: 6
+
+Build graph, l: 4, w: 2415, Elapsed: 1
+
+find path, Elapsed: 54
+belie
+belle
+belly
+bully
+bulky
+balky
+baldy
+bandy
+handy
+hardy
+harry
+parry
+party
+pasty
+paste
+passe
+parse
+purse
+purge
+surge
+serge
+verge
+verse
+terse
+tease
+cease
+chase
+chose
+chore
+shore
+shire
+spire
+spice
+slice
+slide
+glide
+guide
+guile
+guilt
+quilt
+quirt
+quart
+quark
+quack
+
+Output, Elapsed: 3
+
+words: comic quack
+start: 495, end: 1599
+
+search Line, l: 4, Elapsed: 7
+
+Build graph, l: 4, w: 2415, Elapsed: 2
+
+find path, Elapsed: 51
+comic
+conic
+monic
+manic
+mania
+manna
+canna
+canny
+candy
+handy
+hardy
+harry
+parry
+party
+pasty
+paste
+passe
+parse
+purse
+purge
+surge
+serge
+verge
+verse
+terse
+tease
+cease
+chase
+chose
+chore
+shore
+shire
+spire
+spice
+slice
+slide
+glide
+guide
+guile
+guilt
+quilt
+quirt
+quart
+quark
+quack
+
+Output, Elapsed: 3
+
+words: quack runic
+start: 1599, end: 1707
+
+search Line, l: 4, Elapsed: 12
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 53
+quack
+quark
+quart
+quirt
+quilt
+guilt
+guile
+guide
+glide
+elide
+elite
+elate
+plate
+place
+peace
+peach
+leach
+leash
+lease
+tease
+terse
+verse
+verge
+serge
+surge
+purge
+purse
+parse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+candy
+canny
+canna
+manna
+mania
+manic
+monic
+tonic
+tunic
+runic
+
+Output, Elapsed: 2
+
+words: belch jowly
+start: 203, end: 1121
+
+search Line, l: 4, Elapsed: 5
+
+Build graph, l: 4, w: 2415, Elapsed: 0
+
+find path, Elapsed: 51
+belch
+beach
+leach
+leash
+lease
+tease
+terse
+verse
+verge
+serge
+surge
+purge
+purse
+parse
+passe
+paste
+pasty
+party
+parry
+harry
+hardy
+handy
+bandy
+baldy
+balky
+bulky
+bully
+belly
+jelly
+jolly
+jowly
+
+Output, Elapsed: 2
