@@ -13,18 +13,6 @@
 #define MAX_LENGTH_OF_WORD 16
 #define MAX_NUMBER_OF_WORDS 25143
 
-typedef struct _node
-{
-    int element;
-    struct _node *next;
-} node;
-
-typedef struct
-{
-    struct _node *head;
-    struct _node *tail;
-} adj_info;
-
 typedef struct
 {
     int top;
@@ -55,6 +43,7 @@ typedef struct
     int last;
     int count;
     int capacity;
+    int iterator;
 } queue;
 
 queue *create_queue(int capacity)
@@ -67,7 +56,7 @@ queue *create_queue(int capacity)
     }
 
     q->capacity = capacity;
-    q->count = 0, q->first = 0, q->last = 0;
+    q->count = 0, q->first = 0, q->last = 0, q->iterator = 0;
     q->items = (int *)malloc(q->capacity * sizeof(int));
     if (!q->items)
     {
@@ -83,6 +72,12 @@ void init_queue(queue *q)
     q->first = 0;
     q->last = 0;
     q->count = 0;
+    q->iterator = 0;
+}
+
+void reset_iterator(queue *q)
+{
+    q->iterator = q->first;
 }
 
 void enqueue(queue *q, int x)
@@ -112,6 +107,16 @@ int dequeue(queue *q)
 int is_empty_queue(queue *q)
 {
     return (q->count <= 0);
+}
+
+int has_next(queue *q)
+{
+    return q->iterator != q->last;
+}
+
+int next(queue *q)
+{
+    return q->items[q->iterator++];
 }
 
 char dict[MAX_NUMBER_OF_WORDS][MAX_LENGTH_OF_WORD + 1];
@@ -204,10 +209,11 @@ int find_path(int l, int start, int end)
         v = dequeue(q);
 
         queue *q_adj = adjacency[l][v];
+        reset_iterator(q_adj);
 
-        while (!is_empty_queue(q_adj))
+        while (has_next(q_adj))
         {
-            i = dequeue(q_adj);
+            i = next(q_adj);
 
             if (i == end)
             {
@@ -308,7 +314,7 @@ int main(void)
             w = word_cnt_by_len[l];
             for (i = 0; i < w; i++)
             {
-                adjacency[l][i] = create_queue(64);
+                adjacency[l][i] = create_queue(32);
             }
 
             for (i = 0; i < w - 1; i++)
