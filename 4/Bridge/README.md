@@ -6,8 +6,8 @@
 
 两种过桥方式：
 
-1，1st、2nd过 -> 1st返回 -> 3rd、4th过 -> 2nd返回 -> 1st、2nd过，总时间：2nd + 1st + 4th + 2nd +2nd
-2，1st、2nd过 -> 1st返回 -> 1st、3rd过 -> 1st返回 -> 1st、4th过，总时间：2nd + 1st + 3rd + 1st + 4th
+1. 1st、2nd过 -> 1st返回 -> 3rd、4th过 -> 2nd返回 -> 1st、2nd过，总时间：2nd + 1st + 4th + 2nd +2nd
+2. 1st、2nd过 -> 1st返回 -> 1st、3rd过 -> 1st返回 -> 1st、4th过，总时间：2nd + 1st + 3rd + 1st + 4th
 
 快慢取决于2nd +2nd和1st + 3rd的大小，其它的方案比这两个方案都会慢
 
