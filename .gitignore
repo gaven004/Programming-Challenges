@@ -4,6 +4,9 @@
 # Backup files
 **/bak/
 
+# IDEA settings
+**/.idea/
+
 # VS code settings
 **/.vscode/
 
@@ -37,6 +40,9 @@
 *.so.*
 *.dylib
 
+# MakeFiles
+**/CMakeLists.txt
+
 # Executables
 *.exe
 *.out
@@ -46,6 +52,7 @@
 *.hex
 
 # Debug files
+**/cmake-build-debug/
 *.dSYM/
 *.su
 *.idb
