@@ -173,10 +173,10 @@ int main(void) {
                    tables[i].goal_difference, tables[i].goals, tables[i].goals_against);
         }
 
+        n--;
         if (n) {
             printf("\n");
         }
-        n--;
     }
     return EXIT_SUCCESS;
 }
