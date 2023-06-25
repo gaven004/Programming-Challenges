@@ -4,9 +4,10 @@
  */
 
 #include <stdio.h>
-#include <math.h>
 
 #define MAXL 20
+
+int T[11] = {0, 3, 9, 31, 99, 316, 999, 3162, 10000, 31622, 65536};
 
 int scan(char *s) {
     int c, l = 0;
@@ -22,7 +23,18 @@ int scan(char *s) {
     return l;
 }
 
-int is_square(char buff[MAXL], int l) {
+int is_perfect_square_int(unsigned long long n, int l) {
+    unsigned long long x = T[l];
+
+    /* 牛顿迭代法 */
+    while (x * x > n) {
+        x = (x + n / x) >> 1;
+    }
+
+    return x * x == n;
+}
+
+int is_perfect_square(char buff[MAXL], int l) {
     char c;
     unsigned int n, s;
 
@@ -50,8 +62,7 @@ int is_square(char buff[MAXL], int l) {
         }
     }
 
-    s = (unsigned int) sqrt(n);
-    return s * s == n;
+    return is_perfect_square_int(n, l);
 }
 
 int main() {
@@ -60,7 +71,7 @@ int main() {
 
     l = scan(buff);
     while (l > 0 && buff[0] > '0') {
-        if (is_square(buff, l)) {
+        if (is_perfect_square(buff, l)) {
             puts("yes");
         } else {
             puts("no");
