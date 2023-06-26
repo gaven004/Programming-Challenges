@@ -4,14 +4,38 @@
  */
 
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
 
 #define MAXL 20
 
-int is_perfect_square(char buff[MAXL], int l) {
+unsigned int T[11] = {0, 3, 9, 31, 99, 316, 999, 3162, 10000, 31622, 65536};
+
+int scan(char *s, unsigned int *p) {
+    int c, l = 0;
+
+    *p = 0, c = getchar();
+    while ('0' <= c) {
+        *s = c - '0', *p = *p * 10 + *s;
+        s++, l++;
+        c = getchar();
+    }
+
+    return l;
+}
+
+int is_perfect_square_int(unsigned int n, int l) {
+    long long x = T[l];
+
+    /* 牛顿迭代法 */
+    while (x * x > n) {
+        x = (x + n / x) >> 1;
+    }
+
+    return x * x == n;
+}
+
+int is_perfect_square(char buff[MAXL], int l, unsigned int n) {
     char c, b;
-    unsigned int n, s;
+    unsigned int s;
 
     /*
      * (1)平方数的个位数字只能是0，1，4，5，6，9。
@@ -19,7 +43,7 @@ int is_perfect_square(char buff[MAXL], int l) {
      */
 
     c = buff[l - 1];
-    if (c == '2' || c == '3' || c == '7' || c == '8') {
+    if (c == 2 || c == 3 || c == 7 || c == 8) {
         return 0;
     }
 
@@ -27,49 +51,59 @@ int is_perfect_square(char buff[MAXL], int l) {
         b = buff[l - 2];
 
         switch (c) {
-            case '0':
-                if (b != '0') {
+            case 0:
+                if (b != 0) {
                     return 0;
                 }
                 break;
-            case '5':
-                if (b != '2') {
+            case 5:
+                if (b != 2) {
                     return 0;
                 }
                 break;
-            case '6':
-                if (b == '2' || b == '4' || b == '6' || b == '8' || b == '0') {
+            case 6:
+                if (b == 2 || b == 4 || b == 6 || b == 8 || b == 0) {
                     return 0;
                 }
                 break;
-            case '1':
-            case '4':
-            case '9':
-                if (b == '1' || b == '3' || b == '5' || b == '7' || b == '9') {
+            case 1:
+            case 4:
+            case 9:
+                if (b == 1 || b == 3 || b == 5 || b == 7 || b == 9) {
                     return 0;
                 }
                 break;
         }
     }
 
-    sscanf(buff, "%u", &n);
+    if (c == 0 || c == 4 || c == 6) {
+        if (n % 4 != 0) {
+            return 0;
+        }
+    }
 
-    s = sqrtf(n);
-    return s * s == n;
+    if (c == 1 || c == 5 || c == 9) {
+        if (n % 8 != 1) {
+            return 0;
+        }
+    }
+
+    return is_perfect_square_int(n, l);
 }
 
 int main() {
     char buff[MAXL];
     int l;
+    unsigned int n;
 
-    scanf("%s", buff), l = strlen(buff);
-    while (l > 0 && buff[0] > '0') {
-        if (is_perfect_square(buff, l)) {
+    l = scan(buff, &n);
+    while (l > 0 && n > 0) {
+        if (is_perfect_square(buff, l, n)) {
             puts("yes");
         } else {
             puts("no");
         }
 
-        scanf("%s", buff), l = strlen(buff);
+        l = scan(buff, &n);
     }
 }
