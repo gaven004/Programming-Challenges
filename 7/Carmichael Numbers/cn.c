@@ -5,14 +5,14 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #define MAXN 65000
 
 unsigned int R[MAXN];
-int F[MAXN];
 
 int is_composite_number(unsigned int n) {
-    int i, l;
+    unsigned int i, l;
 
     if (n <= 3) {
         return 0;
@@ -34,22 +34,20 @@ int is_composite_number(unsigned int n) {
 
 /* get a ^ x mod n */
 unsigned int mod(int a, int x, int n) {
-    int i;
-
-    if (F[x]) {
-        return R[x];
-    }
-
     if (x == 1) {
-        R[1] = a, F[1] = 1;
         return a;
     }
 
-    i = x / 2;
-    R[x] = (mod(a, i, n) * mod(a, x - i, n)) % n;
-    F[x] = 1;
+    unsigned int i = x / 2;
+    unsigned int result = mod(a, i, n);
 
-    return R[x];
+    result = (result * result) % n;
+
+    if (x - i > i) {
+        result = (result * a) % n;
+    }
+
+    return result;
 }
 
 int is_carmichael_number(unsigned int n) {
@@ -61,10 +59,6 @@ int is_carmichael_number(unsigned int n) {
     }
 
     for (a = 2; a < n; a++) {
-        for (i = 0; i <= n; ++i) {
-            F[i] = 0;
-        }
-
         // test a ^ n mod n = a
         if (mod(a, n, n) != a) {
             return 0;
@@ -77,6 +71,10 @@ int is_carmichael_number(unsigned int n) {
 int main() {
     int n;
 
+    clock_t start, end;
+
+    start = clock();
+
     scanf("%d", &n);
     while (n) {
         if (is_carmichael_number(n)) {
@@ -87,4 +85,9 @@ int main() {
 
         scanf("%d", &n);
     }
+
+    end = clock();
+
+    printf("\nElapsed: %ld\n", end - start);
+
 }
