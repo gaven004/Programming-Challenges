@@ -4,63 +4,78 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <time.h>
 
 #define MAXN 65000
 
-unsigned int R[MAXN];
+unsigned int n_prime_numbers;
+unsigned int P[MAXN];
 
-int is_composite_number(unsigned int n) {
-    unsigned int i, l;
+int is_prime_number(unsigned int n) {
+    unsigned int i, s;
 
     if (n <= 3) {
-        return 0;
-    }
-
-    if (n % 2 == 0 || n % 3 == 0) {
         return 1;
     }
 
-    l = sqrt(n) + 1; // 由于精度问题，保险起见加1
-    for (i = 5; i <= l; i += 6) {
-        if (n % i == 0 || n % (i + 2) == 0) {
-            return 1;
+    s = sqrt(n) + 1; // 由于精度问题，保险起见加1
+
+    for (i = 0; P[i] <= s && i < n_prime_numbers; ++i) {
+        if (n % P[i] == 0) {
+            return 0;
         }
     }
 
-    return 0;
+    return 1;
+}
+
+void init_prime_number_table() {
+    unsigned int i;
+
+    n_prime_numbers = 0;
+    for (i = 2; i <= MAXN; ++i) {
+        if (is_prime_number(i)) {
+            P[n_prime_numbers] = i;
+            n_prime_numbers++;
+        }
+    }
+}
+
+int cmp(const void *a, const void *b) {
+    return (*(int *) a - *(int *) b);
+}
+
+int is_composite_number(unsigned int n) {
+    return bsearch(&n, P, n_prime_numbers, sizeof(unsigned int), cmp) == NULL;
 }
 
 /* get a ^ x mod n */
-unsigned int mod(int a, int x, int n) {
-    if (x == 1) {
-        return a;
-    }
+unsigned int mod(unsigned int a, unsigned int x, unsigned int n) {
+    unsigned int result = 1;
 
-    unsigned int i = x / 2;
-    unsigned int result = mod(a, i, n);
-
-    result = (result * result) % n;
-
-    if (x - i > i) {
-        result = (result * a) % n;
+    while (x > 0) {
+        if (x & 1) {
+            result = (result * a) % n;
+        }
+        a = (a * a) % n;
+        x >>= 1;
     }
 
     return result;
 }
 
 int is_carmichael_number(unsigned int n) {
-    unsigned int a;
     int i;
 
     if (!is_composite_number(n)) {
         return 0;
     }
 
-    for (a = 2; a < n; a++) {
-        // test a ^ n mod n = a
-        if (mod(a, n, n) != a) {
+    for (i = 0; i < n_prime_numbers && P[i] <= n; i++) {
+        // test i ^ n mod n = i
+        if (mod(P[i], n, n) != P[i]) {
             return 0;
         }
     }
@@ -71,9 +86,7 @@ int is_carmichael_number(unsigned int n) {
 int main() {
     int n;
 
-    clock_t start, end;
-
-    start = clock();
+    init_prime_number_table();
 
     scanf("%d", &n);
     while (n) {
@@ -85,9 +98,4 @@ int main() {
 
         scanf("%d", &n);
     }
-
-    end = clock();
-
-    printf("\nElapsed: %ld\n", end - start);
-
 }
