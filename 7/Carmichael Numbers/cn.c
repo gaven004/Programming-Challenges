@@ -22,7 +22,7 @@ int is_prime_number(unsigned int n) {
 
     s = sqrt(n) + 1; // 由于精度问题，保险起见加1
 
-    for (i = 0; P[i] <= s && i < n_prime_numbers; ++i) {
+    for (i = 1; P[i] <= s && i < n_prime_numbers; ++i) {
         if (n % P[i] == 0) {
             return 0;
         }
@@ -34,8 +34,10 @@ int is_prime_number(unsigned int n) {
 void init_prime_number_table() {
     unsigned int i;
 
-    n_prime_numbers = 0;
-    for (i = 2; i <= MAXN; ++i) {
+    P[0] = 2;
+    n_prime_numbers = 1;
+
+    for (i = 3; i <= MAXN; i += 2) {
         if (is_prime_number(i)) {
             P[n_prime_numbers] = i;
             n_prime_numbers++;
@@ -68,8 +70,20 @@ unsigned int mod(unsigned int a, unsigned int x, unsigned int n) {
 
 int is_carmichael_number(unsigned int n) {
     int i;
+    unsigned int s;
 
     if (!is_composite_number(n)) {
+        return 0;
+    }
+
+    /* 必然为奇数 */
+    if (!(n & 1)) {
+        return 0;
+    }
+
+    /* 无平方因子 */
+    s = sqrt(n);
+    if (s * s == n) {
         return 0;
     }
 
