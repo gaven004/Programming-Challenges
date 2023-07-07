@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <time.h>
 
 #define MAXN 65536
 
@@ -82,14 +81,15 @@ int main() {
 
         s = sqrt(m) + 1, q = m, f = 1;
         for (i = 0; i < n_prime_numbers && P[i] <= s; ++i) {
-            for (c = 0; q % P[i] == 0; ++c) {
-                q = q / P[i];
-            }
-
-            if (c > 0) {
+            if (q % P[i] == 0) {
                 if (P[i] > n) {
                     f = 0;
                     break;
+                }
+
+                c = 1, q = q / P[i];
+                while (q % P[i] == 0) {
+                    c++, q = q / P[i];
                 }
 
                 if (check_factors(n, P[i], c) == 0) {
