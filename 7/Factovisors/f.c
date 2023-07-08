@@ -11,7 +11,7 @@
 int F[MAXN];
 
 int n_prime_numbers;
-unsigned int P[MAXN];
+int P[MAXN];
 
 int check_factors(int n, int f, int e) {
     int c;
@@ -50,7 +50,7 @@ void init_prime_number_table() {
 }
 
 int main() {
-    unsigned int n, m, i, c, s, q, f;
+    int n, m, i, c, s, q, f;
 
     init_prime_number_table();
 
@@ -80,13 +80,8 @@ int main() {
         }
 
         s = sqrt(m) + 1, q = m, f = 1;
-        for (i = 0; i < n_prime_numbers && P[i] <= s; ++i) {
+        for (i = 0; P[i] <= s && P[i] <= n; ++i) {
             if (q % P[i] == 0) {
-                if (P[i] > n) {
-                    f = 0;
-                    break;
-                }
-
                 c = 1, q = q / P[i];
                 while (q % P[i] == 0) {
                     c++, q = q / P[i];
