@@ -6,13 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define MAXN 65536
-
-int F[MAXN];
-
-int n_prime_numbers;
-int P[MAXN];
-
 int check_factors(int n, int f, int e) {
     int c;
 
@@ -29,30 +22,8 @@ int check_factors(int n, int f, int e) {
     return 0;
 }
 
-void init_prime_number_table() {
-    unsigned int i, j;
-
-    F[0] = F[1] = 0;
-    for (i = 2; i < MAXN; i++) {
-        F[i] = 1;
-    }
-
-    n_prime_numbers = 0;
-    for (i = 2; i < MAXN; i++) {
-        if (F[i]) {
-            P[n_prime_numbers] = i;
-            n_prime_numbers++;
-            for (j = i * i; j < MAXN; j += i) {
-                F[j] = 0;
-            }
-        }
-    }
-}
-
 int main() {
     int n, m, i, c, s, q, f;
-
-    init_prime_number_table();
 
     while (scanf("%u %u", &n, &m) != EOF) {
         /*
@@ -79,15 +50,54 @@ int main() {
             continue;
         }
 
-        s = sqrt(m) + 1, q = m, f = 1;
-        for (i = 0; P[i] <= s && P[i] <= n; ++i) {
-            if (q % P[i] == 0) {
-                c = 1, q = q / P[i];
-                while (q % P[i] == 0) {
-                    c++, q = q / P[i];
+        q = m;
+
+        if (q % 2 == 0) {
+            c = 1, q = q / 2;
+            while (q % 2 == 0) {
+                c++, q = q / 2;
+            }
+
+            if (check_factors(n, 2, c) == 0) {
+                printf("%u does not divide %u!\n", m, n);
+                continue;
+            }
+        }
+
+        if (q % 3 == 0) {
+            c = 1, q = q / 3;
+            while (q % 3 == 0) {
+                c++, q = q / 3;
+            }
+
+            if (check_factors(n, 3, c) == 0) {
+                printf("%u does not divide %u!\n", m, n);
+                continue;
+            }
+        }
+
+        s = sqrt(m) + 1, f = 1;
+        for (i = 5; i <= s && i <= n; i += 4) {
+            if (q % i == 0) {
+                c = 1, q = q / i;
+                while (q % i == 0) {
+                    c++, q = q / i;
                 }
 
-                if (check_factors(n, P[i], c) == 0) {
+                if (check_factors(n, i, c) == 0) {
+                    f = 0;
+                    break;
+                }
+            }
+
+            i += 2;
+            if (q % i == 0) {
+                c = 1, q = q / i;
+                while (q % i == 0) {
+                    c++, q = q / i;
+                }
+
+                if (check_factors(n, i, c) == 0) {
                     f = 0;
                     break;
                 }
