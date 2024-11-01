@@ -13,35 +13,40 @@
 char F[MAXN];
 int expressed[N_PRIMES];
 
+/**
+ * Sieve of Eratosthenes algorithm
+ */
 void init_prime_number_table() {
     int i;
 
     F[2] = 1;
-    for (i = 4; i < MAXN; i += 2) {
-        F[i] = 0, F[i + 1] = 1;
+    for (i = 3; i < MAXN; i += 2) {
+        F[i] = 1;
     }
 
-    F[3] = 1;
     for (i = 9; i < MAXN; i += 6) {
         F[i] = 0;
     }
 
     for (i = 5; i <= MAX_SQRT_N; i += 4) {
         if (F[i]) {
-            for (int k = i * i; k < MAXN; k += i) {
+            for (int k = i * i, s = 2 * i; k < MAXN; k += s) {
                 F[k] = 0;
             }
         }
 
         i = i + 2;
         if (F[i]) {
-            for (int k = i * i; k < MAXN; k += i) {
+            for (int k = i * i, s = 2 * i; k < MAXN; k += s) {
                 F[k] = 0;
             }
         }
     }
 }
 
+/**
+ * Goldbach’sconjecture
+ */
 int express(int n) {
     if (n % 2) {
         n -= 5;
