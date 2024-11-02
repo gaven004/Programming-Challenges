@@ -4,7 +4,11 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+
+#define MAXN 10000001
+#define MAX_SQRT_N 3162
+
+#define N_PRIMES 4
 
 int n_prime_numbers = 446;
 /* prime_number table */
@@ -33,35 +37,47 @@ int P[] = {
     3023, 3037, 3041, 3049, 3061, 3067, 3079, 3083, 3089, 3109, 3119, 3121, 3137
 };
 
-int expressed[4];
+int K = 15; // P[K] = 53, 53 * 53
 
-int numcmp(const void *a, const void *b) {
-    return (*(int *) a - *(int *) b);
-}
+char F[MAXN];
+int expressed[N_PRIMES];
 
-int is_prime(const int n) {
+/**
+ * Sieve of Eratosthenes algorithm
+ */
+void init_prime_number_table() {
     int i;
 
-    if (n <= P[n_prime_numbers - 1]) {
-        return bsearch((const void *) &n, P, n_prime_numbers, sizeof(int), numcmp) != NULL;
+    F[2] = 1;
+    for (i = 3; i < MAXN; i++) {
+        F[i] = 1, F[++i] = 0;
     }
 
-    for (i = 0; i < n_prime_numbers; i++) {
-        if (n % P[i] == 0) {
-            return 0;
+    for (i = 9; i < MAXN; i += 6) {
+        F[i] = 0;
+    }
+
+    for (i = 5; i <= MAX_SQRT_N; i += 4) {
+        if (F[i]) {
+            for (int k = i * i, s = 2 * i; k < MAXN; k += s) {
+                F[k] = 0;
+            }
+        }
+
+        i = i + 2;
+        if (F[i]) {
+            for (int k = i * i, s = 2 * i; k < MAXN; k += s) {
+                F[k] = 0;
+            }
         }
     }
-
-    return 1;
 }
 
 /**
  * Goldbach’sconjecture
  */
 int express(int n) {
-    int i, e;
-
-    if (n % 2) {
+    if (n & 1) {
         n -= 5;
         expressed[0] = 2, expressed[1] = 3;
     } else {
@@ -69,22 +85,27 @@ int express(int n) {
         expressed[0] = expressed[1] = 2;
     }
 
-    for (i = 0; i < n_prime_numbers; i++) {
-        if (is_prime(n - P[i])) {
-            expressed[2] = P[i], expressed[3] = n - P[i];
-            return 1;
-        }
+    int i = 2;
+    if (F[n - i]) {
+        expressed[2] = i, expressed[3] = n - i;
+        return 1;
     }
 
-    e = n / 2;
-    for (i = P[n_prime_numbers - 1]; i <= e; i += 4) {
-        if (is_prime(i) && is_prime(n - i)) {
+    i = 3;
+    if (F[n - i]) {
+        expressed[2] = i, expressed[3] = n - i;
+        return 1;
+    }
+
+    const int e = n / 2;
+    for (i = 5; i <= e; i += 4) {
+        if (F[i] && F[n - i]) {
             expressed[2] = i, expressed[3] = n - i;
             return 1;
         }
 
         i += 2;
-        if (is_prime(i) && is_prime(n - i)) {
+        if (F[i] && F[n - i]) {
             expressed[2] = i, expressed[3] = n - i;
             return 1;
         }
@@ -96,8 +117,10 @@ int express(int n) {
 int main() {
     int n;
 
+    init_prime_number_table();
+
     while (scanf("%d", &n) != EOF) {
-        if (8 < n && express(n)) {
+        if (express(n)) {
             printf("%d %d %d %d\n", expressed[0], expressed[1], expressed[2], expressed[3]);
         } else {
             printf("Impossible.\n");

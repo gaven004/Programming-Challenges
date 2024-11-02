@@ -48,7 +48,7 @@ void init_prime_number_table() {
  * Goldbach’sconjecture
  */
 int express(int n) {
-    if (n % 2) {
+    if (n & 1) {
         n -= 5;
         expressed[0] = 2, expressed[1] = 3;
     } else {
@@ -57,13 +57,13 @@ int express(int n) {
     }
 
     int i = 2;
-    if (F[i] && F[n - i]) {
+    if (F[n - i]) {
         expressed[2] = i, expressed[3] = n - i;
         return 1;
     }
 
     i = 3;
-    if (F[i] && F[n - i]) {
+    if (F[n - i]) {
         expressed[2] = i, expressed[3] = n - i;
         return 1;
     }
