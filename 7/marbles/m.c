@@ -7,27 +7,50 @@
 
 /*
  * Extended Euclidean Algorithm
- * d = ax + by
+ *
+ * INPUT
+ *   a, b = two non-negative integers
+ * OUTPUT
+ *   d = the greatest common divisor (GCD) of a and b
+ *   x, y = integers such that d = x * a + y * b
  */
-int egcd(int a, int b, int *d, int *x, int *y) {
-    int u, v, q, r, m, n;
-
-    *x = 0, *y = 1, u = 1, v = 0;
-    while (b) {
-        q = a / b, r = a % b;
-
-        a = b, b = r;
-        *x = u, *y = v;
-
+int egcd(long long a, long long b, long long *x, long long *y) {
+    if (b == 0) {
+        *x = 1, *y = 0;
+        return a;
     }
 
-    *d = a;
+    long long q, r, d, xn, yn;
+    q = a / b, r = a % b;
+    d = egcd(b, r, &xn, &yn);
+    *x = yn, *y = xn - q * yn;
+    return d;
 }
 
 void solve(int n, int n1, int n2, int *m1, int *m2) {
-    int i, j, d;
+    long long x, y, d, m, dx, dy;
 
     if (n >= n1 && n >= n2) {
+        d = egcd(n1, n2, &x, &y);
+
+        if (n % d == 0) {
+            m = n / d, x *= m, y *= m;
+            dx = n2 / d, dy = n1 / d;
+
+            if (y >= dy) {
+                m = y / dy, y = y - m * dy, x = x + m * dx;
+            } else if (y < 0) {
+                m = -y / dy, y = y + m * dy, x = x - m * dx;
+                if (y < 0) {
+                    y = y + dy, x = x - dx;
+                }
+            }
+
+            if (x >= 0 && y >= 0) {
+                *m1 = x, *m2 = y;
+                return;
+            }
+        }
     }
 
     *m1 = 0, *m2 = 0;
