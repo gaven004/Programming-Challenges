@@ -83,8 +83,44 @@ unsigned int lcm(unsigned int m, unsigned int n) {
     return m / gcd(m, n) * n;
 }
 
+/*
+ * Extended Euclidean Algorithm
+ *
+ * INPUT
+ *   a, b = two non-negative integers
+ * OUTPUT
+ *   d = the greatest common divisor (GCD) of a and b
+ *   x, y = integers such that d = x * a + y * b
+ */
+int egcd(int a, int b, int *x, int *y) {
+    int s = 0, t = 1, old_s = 1, old_t = 0;
+    int q, r, m, n;
+
+    while (b != 0) {
+        q = a / b, r = a % b;
+        m = s - old_s * q, n = t - old_t * q;
+        a = b, b = r, s = old_s, t = old_t, old_s = m, old_t = n;
+    }
+
+    *x = t, *y = s;
+    return a;
+}
+
+int egcd_r(int a, int b, int *x, int *y) {
+    if (b == 0) {
+        *x = 1, *y = 0;
+        return a;
+    }
+
+    int q, r, d, xn, yn;
+    q = a / b, r = a % b;
+    d = egcd_r(b, r, &xn, &yn);
+    *x = yn, *y = xn - q * yn;
+    return d;
+}
+
 int main() {
-    int n = 823;
+    int n = 823, x, y;
 
     if (is_prime(n)) {
         printf("%d is a prime number.\n", n);
@@ -99,4 +135,7 @@ int main() {
 
     n = lcm(24, 36);
     printf("%u\n", n);
+
+    n = egcd(1914,899, &x, &y);
+    printf("%d = %d * %d + %d * %d\n", n, 1914, x, 899, y);
 }
