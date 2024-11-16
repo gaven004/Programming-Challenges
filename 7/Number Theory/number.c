@@ -91,8 +91,9 @@ unsigned int lcm(unsigned int m, unsigned int n) {
  * OUTPUT
  *   d = the greatest common divisor (GCD) of a and b
  *   x, y = integers such that d = x * a + y * b
+ *   and d = (x + dx) * a + (y + dy) * b
  */
-int egcd(int a, int b, int *x, int *y) {
+int egcd(int a, int b, int *x, int *y, int *dx, int *dy) {
     int s = 0, t = 1, old_s = 1, old_t = 0;
     int q, r, m, n;
 
@@ -102,7 +103,7 @@ int egcd(int a, int b, int *x, int *y) {
         a = b, b = r, s = old_s, t = old_t, old_s = m, old_t = n;
     }
 
-    *x = t, *y = s;
+    *x = t, *y = s, *dx = n, *dy = m;
     return a;
 }
 
@@ -120,7 +121,7 @@ int egcd_r(int a, int b, int *x, int *y) {
 }
 
 int main() {
-    int n = 823, x, y;
+    int n = 823, x, y, dx, dy;
 
     if (is_prime(n)) {
         printf("%d is a prime number.\n", n);
@@ -136,6 +137,7 @@ int main() {
     n = lcm(24, 36);
     printf("%u\n", n);
 
-    n = egcd(1914,899, &x, &y);
+    n = egcd(1914,899, &x, &y, &dx, &dy);
     printf("%d = %d * %d + %d * %d\n", n, 1914, x, 899, y);
+    printf("%d = %d * %d + %d * %d\n", (1914 * (x + dx) + 899 * (y + dy)), 1914, x + dx, 899, y + dy);
 }

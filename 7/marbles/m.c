@@ -13,41 +13,42 @@
  * OUTPUT
  *   d = the greatest common divisor (GCD) of a and b
  *   x, y = integers such that d = x * a + y * b
+ *   and d = (x + dx) * a + (y + dy) * b
  */
-int egcd(long long a, long long b, long long *x, long long *y) {
-    if (b == 0) {
-        *x = 1, *y = 0;
-        return a;
+long long egcd(long long a, long long b, long long *x, long long *y, long long *dx, long long *dy) {
+    long long s = 0, t = 1, old_s = 1, old_t = 0;
+    long long q, r, m, n;
+
+    while (b != 0) {
+        q = a / b, r = a % b;
+        m = s - old_s * q, n = t - old_t * q;
+        a = b, b = r, s = old_s, t = old_t, old_s = m, old_t = n;
     }
 
-    long long q, r, d, xn, yn;
-    q = a / b, r = a % b;
-    d = egcd(b, r, &xn, &yn);
-    *x = yn, *y = xn - q * yn;
-    return d;
+    *x = t, *y = s, *dx = n, *dy = m;
+    return a;
 }
 
-void solve(int n, int n1, int n2, int *m1, int *m2) {
+void solve(long long n, long long n1, long long n2, long long *m1, long long *m2) {
     long long x, y, d, m, dx, dy;
 
     if (n >= n1 && n >= n2) {
-        d = egcd(n1, n2, &x, &y);
+        d = egcd(n1, n2, &x, &y, &dx, &dy);
 
         if (n % d == 0) {
             m = n / d, x *= m, y *= m;
-            dx = n2 / d, dy = n1 / d;
+            m = y / dy, y = y - m * dy, x = x - m * dx;
 
-            if (y >= dy) {
-                m = y / dy, y = y - m * dy, x = x + m * dx;
-            } else if (y < 0) {
-                m = -y / dy, y = y + m * dy, x = x - m * dx;
-                if (y < 0) {
-                    y = y + dy, x = x - dx;
+            if (y < 0) {
+                if (dy > 0) {
+                    y += dy, x += dx;
+                } else {
+                    y -= dy, x -= dx;
                 }
             }
 
             if (x >= 0 && y >= 0) {
-                *m1 = x, *m2 = y;
+                *m1 = (int) x, *m2 = (int) y;
                 return;
             }
         }
@@ -60,7 +61,7 @@ int main() {
     int n; /* n marbles */
     int c1, c2; /* costs */
     int n1, n2; /* capacity */
-    int m1, m2; /* number of type i boxes required */
+    long long m1, m2; /* number of type i boxes required */
 
     for (scanf("%d", &n); n; scanf("%d", &n)) {
         scanf("%d %d", &c1, &n1);
