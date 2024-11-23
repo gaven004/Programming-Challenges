@@ -27,16 +27,16 @@ int main() {
      * 这样更容易得出状态转移方程
      */
 
-    // black_rows[i]，棋盘尺寸，从 i-1 扩大到 i，所增加的行数
+    // black_rows[i]，棋盘尺寸为i时，所具有的黑色区域行数
     int black_rows[MAXN + 1] = {0, 1, 1, 3, 3, 5, 5, 7, 7};
-    // write_rows[i]，棋盘尺寸，从 i-1 扩大到 i，所增加的行数
+    // write_rows[i]，棋盘尺寸为i时，所具有的白色区域行数
     int write_rows[MAXN + 1] = {0, 0, 2, 2, 4, 4, 6, 6, 8};
 
     // black_total[i][k]，white_total[i][k]，棋盘尺寸 (i * i)，在黑、白区域，可放置k个棋子的方案数
     // 用Dynamic Programming，通过组合的方法得到这些数值
     long long black_total[MAXN + 1][MAXK + 1] = {}, white_total[MAXN + 1][MAXK + 1] = {};
 
-    int n, k, i;
+    int n, k, i, m;
 
     // k = 0时，只有1种方案
     black_total[0][0] = 1, white_total[0][0] = 1, black_total[1][0] = 1, white_total[1][0] = 1;
@@ -47,7 +47,7 @@ int main() {
         // k = 0时，只有1种方案
         black_total[i][0] = 1, white_total[i][0] = 1;
 
-        for (k = 1; k <= 2 * i - 2; ++k) {
+        for (k = 1, m = 2 * i - 2; k <= m; ++k) {
             black_total[i][k] = black_total[i - 1][k] + black_total[i - 1][k - 1] * (black_rows[i] - (k - 1));
             white_total[i][k] = white_total[i - 1][k] + white_total[i - 1][k - 1] * (write_rows[i] - (k - 1));
         }
