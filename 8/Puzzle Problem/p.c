@@ -5,10 +5,16 @@
  * Created by gaven on 2024/11/26.
  */
 
+/*
+ * https://mathworld.wolfram.com/15Puzzle.html
+ *
+ * https://oi-wiki.org/search/astar/
+ * https://www.geeksforgeeks.org/a-search-algorithm/
+ */
 #include <stdio.h>
 
 #define SIZE 4
-#define MOST_STEPS 50
+#define MOST_STEPS 20
 #define N_DIRECTIONS 4
 
 // 'L', 'U', 'R', 'D': 空块与左、上、右、下边的方块对换
@@ -60,12 +66,6 @@ int can_move(int x, int y, int direction) {
 
 int move(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
     int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[y1][x1];
-    puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
-    *x = x1, *y = y1;
-}
-
-int back(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
-    int x1 = *x - move_x[direction], y1 = *y - move_y[direction], t = puzzle[y1][x1];
     puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
     *x = x1, *y = y1;
 }
@@ -126,11 +126,10 @@ int is_repeat(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], in
 
 int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k) {
     if (k > MOST_STEPS) {
-        puts("Overflow: "), print(puzzle);
         return -1;
     }
 
-    printf("Input puzzle: k=%d\n", k), print(puzzle);
+    // printf("Input puzzle: k=%d\n", k), print(puzzle);
 
     if (is_a_solution(puzzle)) {
         finished = 1;
@@ -156,17 +155,15 @@ int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k)
         move(puzzle, &x, &y, d);
         sequence[k] = d;
 
-        printf("Try: %c\n", movement[d]), print(puzzle);
+        // printf("Try: %c\n", movement[d]), print(puzzle);
 
         int r = solve(puzzle, x, y, sequence, k + 1);
         if (r >= 0) {
             return r;
         }
 
-        printf("Would rollback: %d %d\n", x, y), print(puzzle);
-
         move(puzzle, &x, &y, reverse_move[d]);
-        puts("Back: "), print(puzzle);
+        // puts("Back: "), print(puzzle);
     }
 
     return -1;
