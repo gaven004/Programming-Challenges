@@ -59,21 +59,78 @@ int can_move(int x, int y, int direction) {
 }
 
 int move(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
-    int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[x1][y1];
-    puzzle[x1][y1] = puzzle[*x][*y], puzzle[*x][*y] = t;
+    int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[y1][x1];
+    puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
     *x = x1, *y = y1;
 }
 
 int back(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
-    int x1 = *x - move_x[direction], y1 = *y - move_y[direction], t = puzzle[x1][y1];
-    puzzle[x1][y1] = puzzle[*x][*y], puzzle[*x][*y] = t;
+    int x1 = *x - move_x[direction], y1 = *y - move_y[direction], t = puzzle[y1][x1];
+    puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
     *x = x1, *y = y1;
+}
+
+int cpy(int s[SIZE][SIZE], int t[SIZE][SIZE]) {
+    int i, j;
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            t[i][j] = s[i][j];
+        }
+    }
+}
+
+int cmp(int s[SIZE][SIZE], int t[SIZE][SIZE]) {
+    int i, j;
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (s[i][j] != t[i][j]) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int check_duplicates(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k, int d) {
+    int next[SIZE][SIZE], his[SIZE][SIZE];
+    int nx = x, ny = y, hx = x, hy = y;
+
+    cpy(puzzle, next), cpy(puzzle, his);
+    move(next, &nx, &ny, d);
+    // printf("Next\n", k), print(next);
+
+    for (k--; k >= 0; k--) {
+        move(his, &hx, &hy, reverse_move[sequence[k]]);
+        // printf("His\n", k), print(his);
+        if (cmp(next, his) == 0) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int is_repeat(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k, int direction) {
+    for (int dx = move_x[direction], dy = move_y[direction], i = k - 1; i >= 0; i--) {
+        dx += move_x[sequence[i]], dy += move_y[sequence[i]];
+        if (dx == 0 && dy == 0) {
+            // 空块移动回同一位置，进一步检查是否整个Puzzle都重复
+            if (!check_duplicates(puzzle, x, y, sequence, k, direction)) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }
 
 int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k) {
     if (k > MOST_STEPS) {
+        puts("Overflow: "), print(puzzle);
         return -1;
     }
+
+    printf("Input puzzle: k=%d\n", k), print(puzzle);
 
     if (is_a_solution(puzzle)) {
         finished = 1;
@@ -86,19 +143,30 @@ int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k)
             continue;
         }
 
-        if (can_move(x, y, d)) {
-            print(puzzle);
-            move(puzzle, &x, &y, d);
-            print(puzzle);
-            sequence[k] = d;
-            int r = solve(puzzle, x, y, sequence, k + 1);
-            if (r >= 0) {
-                return r;
-            }
-            back(puzzle, &x, &y, d);
-            print(puzzle);
-            return -1;
+        if (!can_move(x, y, d)) {
+            // 不能移动的方向
+            continue;
         }
+
+        if (is_repeat(puzzle, x, y, sequence, k, d)) {
+            // 环形路线
+            continue;
+        }
+
+        move(puzzle, &x, &y, d);
+        sequence[k] = d;
+
+        printf("Try: %c\n", movement[d]), print(puzzle);
+
+        int r = solve(puzzle, x, y, sequence, k + 1);
+        if (r >= 0) {
+            return r;
+        }
+
+        printf("Would rollback: %d %d\n", x, y), print(puzzle);
+
+        move(puzzle, &x, &y, reverse_move[d]);
+        puts("Back: "), print(puzzle);
     }
 
     return -1;
@@ -106,8 +174,8 @@ int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k)
 
 int main() {
     int cases;
-    int puzzle[SIZE][SIZE];
-    int sequence[MOST_STEPS];
+    int puzzle[SIZE][SIZE] = {};
+    int sequence[MOST_STEPS + 1] = {};
     int x, y, i, j, k;
 
     scanf("%d", &cases);
@@ -116,7 +184,7 @@ int main() {
             for (j = 0; j < SIZE; j++) {
                 scanf("%d", &puzzle[i][j]);
                 if (puzzle[i][j] == 0) {
-                    x = i, y = j;
+                    x = j, y = i;
                 }
             }
         }
