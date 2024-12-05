@@ -169,6 +169,41 @@ int solve(int puzzle[SIZE][SIZE], int x, int y, int sequence[MOST_STEPS], int k)
     return -1;
 }
 
+/*
+ * https://mathworld.wolfram.com/15Puzzle.html
+ */
+int is_solvable(int puzzle[SIZE][SIZE], int y) {
+    int x0, y0, x1, y1;
+    int i, s = 0;
+
+    for (y0 = 0; y0 < SIZE; y0++) {
+        for (x0 = 0; x0 < SIZE; x0++) {
+            i = puzzle[y0][x0];
+            if (i > 1) {
+                x1 = x0 + 1, y1 = y0;
+                if (x1 == SIZE) {
+                    x1 = 0, y1++;
+                }
+
+                while (y1 < SIZE) {
+                    if (puzzle[y1][x1]) {
+                        if (i > puzzle[y1][x1]) {
+                            s++;
+                        }
+                    }
+
+                    x1++;
+                    if (x1 == SIZE) {
+                        x1 = 0, y1++;
+                    }
+                }
+            }
+        }
+    }
+
+    return (s + y + 1) % 2 == 0;
+}
+
 int main() {
     int cases;
     int puzzle[SIZE][SIZE] = {};
@@ -186,15 +221,21 @@ int main() {
             }
         }
 
-        k = solve(puzzle, x, y, sequence, 0);
-
-        if (k >= 0) {
-            for (i = 0; i < k; i++) {
-                printf("%c", movement[sequence[i]]);
-            }
-            printf("\n");
+        if (is_solvable(puzzle, y)) {
+            printf("YES\n");
         } else {
-            puts("This puzzle is not solvable.");
+            printf("NO\n");
         }
+
+        // k = solve(puzzle, x, y, sequence, 0);
+        //
+        // if (k >= 0) {
+        //     for (i = 0; i < k; i++) {
+        //         printf("%c", movement[sequence[i]]);
+        //     }
+        //     printf("\n");
+        // } else {
+        //     puts("This puzzle is not solvable.");
+        // }
     }
 }
