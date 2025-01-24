@@ -15,9 +15,15 @@
 #include <stdio.h>
 
 #define SIZE 4
-#define MOST_STEPS 50
+#define MOST_STEPS 45
 #define N_DIRECTIONS 4
+
+#define MASK 15LL
+#define DEST 0XFEDCBA987654321LL
+
 #define CAPACITY 10000000
+
+unsigned long long _1MASK[16], _0MASK[16];
 
 int dest_x[] = {3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2};
 int dest_y[] = {3, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3};
@@ -141,6 +147,39 @@ void print_movement(int sequence[MOST_STEPS], int k) {
     printf("\n");
 }
 
+void init() {
+    for (int i = 0; i < 16; i++) {
+        _1MASK[i] = MASK << (i * SIZE);
+        _0MASK[i] = ~_1MASK[i];
+    }
+}
+
+unsigned long long matrix_2_long(int puzzle[SIZE][SIZE]) {
+    unsigned long long l = 0LL;
+
+    int x, y, i = 0;
+
+    for (y = 0; y < SIZE; y++) {
+        for (x = 0; x < SIZE; x++) {
+            l += (i == 0 ? (unsigned long long) puzzle[y][x] : (unsigned long long) puzzle[y][x] << i);
+            i += SIZE;
+        }
+    }
+
+    return l;
+}
+
+void long_2_matrix(unsigned long long l, int puzzle[SIZE][SIZE]) {
+    int x, y;
+
+    for (y = 0; y < SIZE; y++) {
+        for (x = 0; x < SIZE; x++) {
+            puzzle[y][x] = (int) (l & MASK);
+            l >>= SIZE;
+        }
+    }
+}
+
 int is_a_solution(int puzzle[SIZE][SIZE]) {
     int x, y;
 
@@ -157,6 +196,28 @@ int is_a_solution(int puzzle[SIZE][SIZE]) {
 
 int distance(int x0, int y0, int x1, int y1) {
     return (x0 > x1 ? x0 - x1 : x1 - x0) + (y0 > y1 ? y0 - y1 : y1 - y0);
+}
+
+int heuristic_s(unsigned long long l, int x0, int y0) {
+    int x1, y1, v;
+    l >>= (y0 * SIZE + x0) * SIZE;
+    v = (int) (l & MASK) - 1;
+    y1 = v / SIZE, x1 = v % SIZE;
+    return distance(x0, y0, x1, y1);
+}
+
+int heuristic_l(unsigned long long l, int x0, int y0) {
+    int x, y, h = 0;
+
+    for (y = 0; y < SIZE; y++) {
+        for (x = 0; x < SIZE; x++) {
+            if (y != y0 || x != x0) {
+                h += heuristic_s(l, x, y);
+            }
+        }
+    }
+
+    return h;
 }
 
 int heuristic(int src[SIZE][SIZE]) {
@@ -191,10 +252,26 @@ int can_move(int x, int y, int direction) {
     return 0;
 }
 
-void move(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
-    int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[y1][x1];
-    puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
+// void move(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
+//     int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[y1][x1];
+//     puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
+//     *x = x1, *y = y1;
+// }
+
+unsigned long long move(unsigned long long board, int *x, int *y, int direction) {
+    int x1 = *x + move_x[direction], y1 = *y + move_y[direction];
+    // s：当前空格的位置，t：准备交换的位置
+    int s = *y * SIZE + *x, t = y1 * SIZE + x1;
+    // 获取t位置的值，并移位
+    unsigned long long v = board & _1MASK[t];
+    if (s > t) {
+        v <<= (s - t) * SIZE;
+    } else {
+        v >>= (t - s) * SIZE;
+    }
+    board &= _0MASK[t], board |= v;
     *x = x1, *y = y1;
+    return board;
 }
 
 int solve(int puzzle[SIZE][SIZE], int x0, int y0, int sequence[MOST_STEPS]) {
@@ -237,7 +314,7 @@ int solve(int puzzle[SIZE][SIZE], int x0, int y0, int sequence[MOST_STEPS]) {
                 continue;
             }
 
-            move(puzzle, &x0, &y0, d);
+            // move(puzzle, &x0, &y0, d);
             sequence[k] = d;
 
             puts("\nnew board:");
@@ -258,7 +335,7 @@ int solve(int puzzle[SIZE][SIZE], int x0, int y0, int sequence[MOST_STEPS]) {
                 // m = f;
             }
 
-            move(puzzle, &x0, &y0, reverse_move[d]);
+            // move(puzzle, &x0, &y0, reverse_move[d]);
         }
     }
 
@@ -306,6 +383,8 @@ int main() {
     int sequence[MOST_STEPS] = {};
     int x, y, x0, y0, k, i;
 
+    init();
+
     scanf("%d", &cases);
     while (cases--) {
         for (y = 0; y < SIZE; y++) {
@@ -317,16 +396,23 @@ int main() {
             }
         }
 
-        if (!is_solvable(board, y0)) {
-            puts("This puzzle is not solvable.");
-            continue;
-        }
+        int f = heuristic(board);
+        printf("heuristic: %d\n", f);
 
-        k = solve(board, x0, y0, sequence);
-        if (k >= 0) {
-            print_movement(sequence, k);
-        } else {
-            puts("This puzzle is not solvable.");
-        }
+        f = heuristic_l(matrix_2_long(board), x0, y0);
+        printf("heuristic: %d\n", f);
+
+
+        // if (!is_solvable(board, y0)) {
+        //     puts("This puzzle is not solvable.");
+        //     continue;
+        // }
+
+        // k = solve(board, x0, y0, sequence);
+        // if (k >= 0) {
+        //     print_movement(sequence, k);
+        // } else {
+        //     puts("This puzzle is not solvable.");
+        // }
     }
 }
