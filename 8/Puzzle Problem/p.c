@@ -18,114 +18,73 @@
 #define MOST_STEPS 45
 #define N_DIRECTIONS 4
 
-#define MASK 15LL
+#define MASK 0XFLL
 #define DEST 0XFEDCBA987654321LL
-
-#define CAPACITY 10000000
 
 unsigned long long _1MASK[16], _0MASK[16];
 
-int dest_x[] = {3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2};
-int dest_y[] = {3, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3};
-
 // 'L', 'U', 'R', 'D': 空块与左、上、右、下边的方块对换
 char movement[] = {'L', 'U', 'R', 'D'};
-int move_x[] = {-1, 0, 1, 0};
-int move_y[] = {0, -1, 0, 1};
-int reverse_move[] = {2, 3, 0, 1};
+char move_x[] = {-1, 0, 1, 0};
+char move_y[] = {0, -1, 0, 1};
+char reverse_move[] = {2, 3, 0, 1};
 
-typedef struct {
-    int board[SIZE][SIZE];
-    int sequence[MOST_STEPS];
-    int steps;
-    int h;
-    int x0, y0;
+typedef struct _node {
+    unsigned long long board;
+    char sequence[MOST_STEPS];
+    char steps, h;
+    char x0, y0;
+    struct _node *next;
 } node_t;
 
 typedef struct {
-    unsigned capacity;
-    node_t *items; /* body of queue */
-    int head; /* position of head element */
-    int tail; /* position of tail element */
-    int size; /* number of queue elements */
+    unsigned size; /* number of queue elements */
+    node_t *head; /* position of head element */
+    node_t *tail; /* position of tail element */
 } queue_t;
 
-void cpy_board(int s[SIZE][SIZE], int t[SIZE][SIZE]) {
-    int x, y;
-    for (y = 0; y < SIZE; y++) {
-        for (x = 0; x < SIZE; x++) {
-            t[x][y] = s[x][y];
+typedef struct {
+    queue_t *queues[MOST_STEPS + 1]; /* position of head element */
+} priority_queue_t;
+
+/* function to create priority_queue_t. */
+priority_queue_t *create_queue() {
+    int i;
+    priority_queue_t *pq = (priority_queue_t *) malloc(sizeof(priority_queue_t));
+    for (i = 1; i <= MOST_STEPS; i++) {
+        queue_t *q = (queue_t *) malloc(sizeof(queue_t));
+        q->size = 0;
+        q->head = NULL;
+        q->tail = NULL;
+        pq->queues[i] = q;
+    }
+    return pq;
+}
+
+void en_queue(priority_queue_t *pq, node_t *node) {
+    queue_t *q = pq->queues[node->h];
+    node->next = NULL;
+    if (q->size == 0) {
+        q->head = node;
+    } else {
+        q->tail->next = node;
+    }
+    q->tail = node;
+    q->size++;
+}
+
+node_t *de_queue(priority_queue_t *pq) {
+    int i;
+    for (i = 1; i <= MOST_STEPS; i++) {
+        queue_t *q = pq->queues[i];
+        if (q->size > 0) {
+            node_t *x = q->head;
+            q->head = q->head->next;
+            q->size--;
+            return x;
         }
     }
-}
-
-void cpy_queue(int s[MOST_STEPS], int t[MOST_STEPS], int steps) {
-    int i;
-    for (i = 0; i < steps; i++) {
-        t[i] = s[i];
-    }
-}
-
-/* function to create a queue of given capacity. */
-queue_t *create_queue(unsigned capacity) {
-    queue_t *queue = (queue_t *) malloc(sizeof(queue_t));
-    if (!queue) {
-        fprintf(stderr, "Error: Out of space!!! Exiting...\n");
-        exit(EXIT_FAILURE);
-    }
-
-    queue->capacity = capacity;
-    queue->size = 0, queue->head = 0, queue->tail = 0;
-    queue->items = (node_t *) malloc(queue->capacity * sizeof(node_t));
-    if (!queue->items) {
-        fprintf(stderr, "Error: Out of space!!! Exiting...\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return queue;
-}
-
-/* queue is full when size is equal to the capacity */
-int is_full(queue_t *queue) { return queue->size == queue->capacity; }
-
-/* queue is empty when size is equal to 0 */
-int is_empty(queue_t *queue) { return queue->size == 0; }
-
-void en_queue(queue_t *queue, int board[SIZE][SIZE], int sequence[MOST_STEPS], int steps, int x0, int y0, int h) {
-    if (is_full(queue)) {
-        puts("Warning: queue overflow enqueue!!!");
-        exit(0);
-    }
-
-    cpy_board(board, queue->items[queue->tail].board);
-    cpy_queue(sequence, queue->items[queue->tail].sequence, steps);
-    queue->items[queue->tail].steps = steps;
-    queue->items[queue->tail].x0 = x0;
-    queue->items[queue->tail].y0 = y0;
-    queue->items[queue->tail].h = h;
-
-    queue->tail++;
-    if (queue->tail == queue->capacity) {
-        queue->tail = 0;
-    }
-    queue->size++;
-}
-
-node_t *de_queue(queue_t *queue) {
-    node_t *x;
-
-    if (is_empty(queue)) {
-        puts("Warning: empty queue dequeue!!!");
-        exit(0);
-    }
-
-    x = &(queue->items[queue->head++]);
-    if (queue->head == queue->capacity) {
-        queue->head = 0;
-    }
-    queue->size--;
-
-    return (x);
+    return NULL;
 }
 
 void print(int puzzle[SIZE][SIZE]) {
@@ -136,10 +95,9 @@ void print(int puzzle[SIZE][SIZE]) {
         }
         printf("\n");
     }
-    // printf("\n");
 }
 
-void print_movement(int sequence[MOST_STEPS], int k) {
+void print_movement(char *sequence, int k) {
     int i;
     for (i = 0; i < k; i++) {
         printf("%c", movement[sequence[i]]);
@@ -148,7 +106,8 @@ void print_movement(int sequence[MOST_STEPS], int k) {
 }
 
 void init() {
-    for (int i = 0; i < 16; i++) {
+    int i;
+    for (i = 0; i < 16; i++) {
         _1MASK[i] = MASK << (i * SIZE);
         _0MASK[i] = ~_1MASK[i];
     }
@@ -180,20 +139,6 @@ void long_2_matrix(unsigned long long l, int puzzle[SIZE][SIZE]) {
     }
 }
 
-int is_a_solution(int puzzle[SIZE][SIZE]) {
-    int x, y;
-
-    for (y = 0; y < SIZE; y++) {
-        for (x = 0; x < SIZE; x++) {
-            if (x != dest_x[puzzle[y][x]] || y != dest_y[puzzle[y][x]]) {
-                return 0;
-            }
-        }
-    }
-
-    return 1;
-}
-
 int distance(int x0, int y0, int x1, int y1) {
     return (x0 > x1 ? x0 - x1 : x1 - x0) + (y0 > y1 ? y0 - y1 : y1 - y0);
 }
@@ -220,24 +165,6 @@ int heuristic_l(unsigned long long l, int x0, int y0) {
     return h;
 }
 
-int heuristic(int src[SIZE][SIZE]) {
-    int x, y, h = 0;
-
-    // print(src);
-
-    for (y = 0; y < SIZE; y++) {
-        for (x = 0; x < SIZE; x++) {
-            if (src[y][x]) {
-                // printf("y = %d, x = %d, v = %d, d = %d\n", y, x, src[y][x],
-                //        distance(x, y, dest_x[src[y][x]], dest_y[src[y][x]]));
-                h += distance(x, y, dest_x[src[y][x]], dest_y[src[y][x]]);
-            }
-        }
-    }
-
-    return h;
-}
-
 int can_move(int x, int y, int direction) {
     switch (direction) {
         case 0:
@@ -252,90 +179,74 @@ int can_move(int x, int y, int direction) {
     return 0;
 }
 
-// void move(int puzzle[SIZE][SIZE], int *x, int *y, int direction) {
-//     int x1 = *x + move_x[direction], y1 = *y + move_y[direction], t = puzzle[y1][x1];
-//     puzzle[y1][x1] = puzzle[*y][*x], puzzle[*y][*x] = t;
-//     *x = x1, *y = y1;
-// }
+void move(node_t *current, node_t *next, int direction) {
+    next->x0 = current->x0 + move_x[direction];
+    next->y0 = current->y0 + move_y[direction];
 
-unsigned long long move(unsigned long long board, int *x, int *y, int direction) {
-    int x1 = *x + move_x[direction], y1 = *y + move_y[direction];
     // s：当前空格的位置，t：准备交换的位置
-    int s = *y * SIZE + *x, t = y1 * SIZE + x1;
+    int si = current->y0 * SIZE + current->x0;
+    int ti = next->y0 * SIZE + next->x0;
+
     // 获取t位置的值，并移位
-    unsigned long long v = board & _1MASK[t];
-    if (s > t) {
-        v <<= (s - t) * SIZE;
+    long v = current->board & _1MASK[ti];
+    if (si > ti) {
+        v <<= (si - ti) * SIZE;
     } else {
-        v >>= (t - s) * SIZE;
+        v >>= (ti - si) * SIZE;
     }
-    board &= _0MASK[t], board |= v;
-    *x = x1, *y = y1;
-    return board;
+
+    next->board = current->board & _0MASK[ti] | v;
+    int i;
+    for (i = 0; i < current->steps; i++) {
+        next->sequence[i] = current->sequence[i];
+    }
+    next->sequence[i] = direction;
+    next->h = current->h - heuristic_s(current->board, next->x0, next->y0)
+              + heuristic_s(next->board, current->x0, current->y0) + 1;
+    next->steps = current->steps + 1;
+
+    printf("from: [%llx], to: [%llx], d: %c, h: %d\n", current->board, next->board, movement[direction], next->h);
 }
 
-int solve(int puzzle[SIZE][SIZE], int x0, int y0, int sequence[MOST_STEPS]) {
-    queue_t *queue;
-    node_t *node;
-    int k, f, m, d;
+int solve(int puzzle[SIZE][SIZE], int x0, int y0) {
+    int d;
+    priority_queue_t *pq = create_queue();
+    node_t *node = malloc(sizeof(node_t));
 
-    if (is_a_solution(puzzle)) {
-        return k;
+    node->board = matrix_2_long(puzzle);
+
+    if (DEST == node->board) {
+        return 0;
     }
 
-    m = heuristic(puzzle);
-    queue = create_queue(CAPACITY);
-    en_queue(queue, puzzle, sequence, 0, x0, y0, m);
+    node->steps = 0, node->h = heuristic_l(node->board, x0, y0);
+    node->x0 = x0, node->y0 = y0;
 
-    while (!is_empty(queue)) {
-        puts("\nde_queue");
-        node = de_queue(queue);
-        k = node->steps;
-        x0 = node->x0;
-        y0 = node->y0;
-        m = node->h;
-        cpy_board(node->board, puzzle);
-        cpy_queue(node->sequence, sequence, k);
+    en_queue(pq, node);
 
-        puts("current board:");
-        print(puzzle);
-        puts("current movement:");
-        print_movement(sequence, k);
-        printf("current heuristic: %d\n", m);
-
+    while ((node = de_queue(pq)) != NULL) {
         for (d = 0; d < N_DIRECTIONS; d++) {
-            if (k > 0 && d == reverse_move[sequence[k - 1]]) {
+            if (node->steps > 0 && d == reverse_move[node->sequence[node->steps - 1]]) {
                 // 不走回头路
                 continue;
             }
 
-            if (!can_move(x0, y0, d)) {
+            if (!can_move(node->x0, node->y0, d)) {
                 // 不能移动的方向
                 continue;
             }
 
-            // move(puzzle, &x0, &y0, d);
-            sequence[k] = d;
+            node_t *next = malloc(sizeof(node_t));
+            move(node, next, d);
 
-            puts("\nnew board:");
-            print(puzzle);
-            puts("movement:");
-            print_movement(sequence, k + 1);
-
-            if (is_a_solution(puzzle)) {
-                return k + 1;
+            if (DEST == next->board) {
+                print_movement(next->sequence, node->steps);
+                return next->steps;
             }
 
-            f = heuristic(puzzle);
-            printf("heuristic: %d\n", f);
-
-            if (f + k <= MOST_STEPS) {
-                puts("en_queue");
-                en_queue(queue, puzzle, sequence, k + 1, x0, y0, f);
-                // m = f;
+            if (next->h <= MOST_STEPS) {
+                en_queue(pq, next);
             }
-
-            // move(puzzle, &x0, &y0, reverse_move[d]);
         }
     }
 
@@ -380,7 +291,6 @@ int is_solvable(int puzzle[SIZE][SIZE], int y) {
 int main() {
     int cases;
     int board[SIZE][SIZE] = {};
-    int sequence[MOST_STEPS] = {};
     int x, y, x0, y0, k, i;
 
     init();
@@ -396,23 +306,11 @@ int main() {
             }
         }
 
-        int f = heuristic(board);
-        printf("heuristic: %d\n", f);
+        if (!is_solvable(board, y0)) {
+            puts("This puzzle is not solvable.");
+            continue;
+        }
 
-        f = heuristic_l(matrix_2_long(board), x0, y0);
-        printf("heuristic: %d\n", f);
-
-
-        // if (!is_solvable(board, y0)) {
-        //     puts("This puzzle is not solvable.");
-        //     continue;
-        // }
-
-        // k = solve(board, x0, y0, sequence);
-        // if (k >= 0) {
-        //     print_movement(sequence, k);
-        // } else {
-        //     puts("This puzzle is not solvable.");
-        // }
+        solve(board, x0, y0);
     }
 }
