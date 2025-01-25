@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 #define SIZE 4
-#define MOST_STEPS 45
+#define MOST_STEPS 50
 #define N_DIRECTIONS 4
 
 #define MASK 0XFLL
@@ -188,7 +188,7 @@ void move(node_t *current, node_t *next, int direction) {
     int ti = next->y0 * SIZE + next->x0;
 
     // 获取t位置的值，并移位
-    long v = current->board & _1MASK[ti];
+    unsigned long long v = current->board & _1MASK[ti];
     if (si > ti) {
         v <<= (si - ti) * SIZE;
     } else {
@@ -205,17 +205,18 @@ void move(node_t *current, node_t *next, int direction) {
               + heuristic_s(next->board, current->x0, current->y0) + 1;
     next->steps = current->steps + 1;
 
-    printf("from: [%llx], to: [%llx], d: %c, h: %d\n", current->board, next->board, movement[direction], next->h);
+    // printf("from: [%llx], to: [%llx], d: %c, h: %d\n", current->board, next->board, movement[direction], next->h);
 }
 
 int solve(int puzzle[SIZE][SIZE], int x0, int y0) {
     int d;
     priority_queue_t *pq = create_queue();
-    node_t *node = malloc(sizeof(node_t));
+    node_t *node = (node_t *) malloc(sizeof(node_t));
 
     node->board = matrix_2_long(puzzle);
 
     if (DEST == node->board) {
+        printf("\n");
         return 0;
     }
 
@@ -236,11 +237,11 @@ int solve(int puzzle[SIZE][SIZE], int x0, int y0) {
                 continue;
             }
 
-            node_t *next = malloc(sizeof(node_t));
+            node_t *next = (node_t *) malloc(sizeof(node_t));
             move(node, next, d);
 
             if (DEST == next->board) {
-                print_movement(next->sequence, node->steps);
+                print_movement(next->sequence, next->steps);
                 return next->steps;
             }
 
