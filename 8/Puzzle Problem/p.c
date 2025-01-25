@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 #define SIZE 4
-#define MOST_STEPS 50
+#define MOST_STEPS 45
 #define N_DIRECTIONS 4
 
 #define MASK 0XFLL
@@ -45,10 +45,11 @@ typedef struct {
 
 typedef struct {
     queue_t *queues[MOST_STEPS + 1]; /* position of head element */
+    int start;
 } priority_queue_t;
 
 /* function to create priority_queue_t. */
-priority_queue_t *create_queue() {
+priority_queue_t *create_queue(int start) {
     int i;
     priority_queue_t *pq = (priority_queue_t *) malloc(sizeof(priority_queue_t));
     for (i = 1; i <= MOST_STEPS; i++) {
@@ -58,6 +59,7 @@ priority_queue_t *create_queue() {
         q->tail = NULL;
         pq->queues[i] = q;
     }
+    pq->start = start;
     return pq;
 }
 
@@ -75,7 +77,7 @@ void en_queue(priority_queue_t *pq, node_t *node) {
 
 node_t *de_queue(priority_queue_t *pq) {
     int i;
-    for (i = 1; i <= MOST_STEPS; i++) {
+    for (i = pq->start; i <= MOST_STEPS; i++) {
         queue_t *q = pq->queues[i];
         if (q->size > 0) {
             node_t *x = q->head;
@@ -210,7 +212,6 @@ void move(node_t *current, node_t *next, int direction) {
 
 int solve(int puzzle[SIZE][SIZE], int x0, int y0) {
     int d;
-    priority_queue_t *pq = create_queue();
     node_t *node = (node_t *) malloc(sizeof(node_t));
 
     node->board = matrix_2_long(puzzle);
@@ -223,6 +224,7 @@ int solve(int puzzle[SIZE][SIZE], int x0, int y0) {
     node->steps = 0, node->h = heuristic_l(node->board, x0, y0);
     node->x0 = x0, node->y0 = y0;
 
+    priority_queue_t *pq = create_queue(node->h);
     en_queue(pq, node);
 
     while ((node = de_queue(pq)) != NULL) {
