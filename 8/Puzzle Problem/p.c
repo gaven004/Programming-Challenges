@@ -45,11 +45,11 @@ typedef struct {
 
 typedef struct {
     queue_t *queues[MOST_STEPS + 1]; /* position of head element */
-    int start;
+    int head;
 } priority_queue_t;
 
 /* function to create priority_queue_t. */
-priority_queue_t *create_queue(int start) {
+priority_queue_t *create_queue(int head) {
     int i;
     priority_queue_t *pq = (priority_queue_t *) malloc(sizeof(priority_queue_t));
     for (i = 1; i <= MOST_STEPS; i++) {
@@ -59,7 +59,7 @@ priority_queue_t *create_queue(int start) {
         q->tail = NULL;
         pq->queues[i] = q;
     }
-    pq->start = start;
+    pq->head = head;
     return pq;
 }
 
@@ -76,9 +76,8 @@ void en_queue(priority_queue_t *pq, node_t *node) {
 }
 
 node_t *de_queue(priority_queue_t *pq) {
-    int i;
-    for (i = pq->start; i <= MOST_STEPS; i++) {
-        queue_t *q = pq->queues[i];
+    for (; pq->head <= MOST_STEPS; (pq->head)++) {
+        queue_t *q = pq->queues[pq->head];
         if (q->size > 0) {
             node_t *x = q->head;
             q->head = q->head->next;
